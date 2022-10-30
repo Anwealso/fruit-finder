@@ -33,21 +33,16 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     #                             IMPORT TRAINED MODEL                             #
     # ---------------------------------------------------------------------------- #
-    # Import trained and saved vqvae model from file
-    # trained_model = keras.models.load_model("./saved_model")
-
+    # Import trained and saved model from file
+    print("Loading model ...")
+    # model = tf.saved_model.load("./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model")
+    model = tf.saved_model.load("./models/ssd_mobilenet_v2_2")
 
     # ---------------------------------------------------------------------------- #
     #                                 FINAL RESULTS                                #
     # ---------------------------------------------------------------------------- #
     # Visualise the final results and calculate the accuracy of the detections
     # utils.show_detection_examples(trained_model, test_data, EXAMPLES_TO_SHOW)
-
-    module_handle = "https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1" 
-    #@param ["https://tfhub.dev/google/openimages_v4/ssd/mobilenet_v2/1", "https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1"]
-
-    print("Loading model from local ...")
-    model = tf.saved_model.load("./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model")
 
     print("Running inference on static images ...")
     utils.run_detector(model, images_path, output_path)

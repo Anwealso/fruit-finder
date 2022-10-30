@@ -34,7 +34,7 @@ An AI fruit scanner for supermarket checkouts
 1. Install Anaconda
 2. Create a clean conda environment and activate it
 3. Install all of the required packages using `conda env create -f environment.yml --name fruitfinder` (see full dependancy list below)
-4. Download the resnet50 model from [here](http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8.tar.gz)
+4. Download the resnet50 model from [here](http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8.tar.gz). Note: various other COCO models accessible [here](https://tfhub.dev/tensorflow/collections/object_detection/1)
 
 ### Usage
 
