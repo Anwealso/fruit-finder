@@ -17,7 +17,7 @@ import time
 import tensorflow as tf
 import glob as glob
 
-
+# TODO: rewrite this so that these class mappings are stored in and accessed from file
 # Load the COCO Label Map
 category_index = {
     1: {'id': 1, 'name': 'person'},
@@ -239,6 +239,52 @@ def run_detector(model, input_folder, output_folder, verbose=True):
 
         print(i)
         i = i + 1
+
+
+
+
+
+
+
+
+
+def run_detector_live(model):
+
+    print("Connecting to webcam ...")
+    # Define a video capture object
+    vid = cv2.VideoCapture(0)
+    
+    print("Streaming frames from webcam ...")
+    while(True):
+        # Capture the video frame by frame
+        ret, frame = vid.read()
+    
+        # Run inference on image
+        img = np.expand_dims(frame, 0)
+        result = model(img)
+        result = {key:value.numpy() for key,value in result.items()}
+        image_with_boxes = draw_boxes(
+            np.squeeze(img), 
+            result["detection_boxes"][0],
+            result["detection_classes"][0],
+            result["detection_scores"][0],
+            max_boxes=10,
+            min_score=0.5)
+
+        # Display the resulting frame
+        cv2.imshow('image_with_boxes', image_with_boxes)
+        
+        # the 'q' button is set as the
+        # quitting button you may use any
+        # desired button of your choice
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    
+    print("Disconnecting from webcam ...")
+    # After the loop release the cap object
+    vid.release()
+    # Destroy all the windows
+    cv2.destroyAllWindows()
 
 
 def view_webcam():

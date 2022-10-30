@@ -11,8 +11,6 @@ Shows example usage of the trained model on individual example images with visua
 import dataset
 import utils
 import tensorflow as tf
-# import tensorflow_hub as hub
-import os
 
 
 if __name__ == "__main__":

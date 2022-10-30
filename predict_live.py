@@ -11,6 +11,7 @@ Shows example usage of the trained model on live webcam video with detection box
 import dataset
 import utils
 from tensorflow import keras
+import tensorflow as tf
 
 
 if __name__ == "__main__":
@@ -24,15 +25,17 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     #                             IMPORT TRAINED MODEL                             #
     # ---------------------------------------------------------------------------- #
-    # Import trained and saved vqvae model from file
-    # trained_model = keras.models.load_model("./saved_model")
+    # Import trained and saved model from file
+    print("Loading model ...")
+    # model = tf.saved_model.load("./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model")
+    model = tf.saved_model.load("./models/ssd_mobilenet_v2_2")
 
 
     # ---------------------------------------------------------------------------- #
     #                                 FINAL RESULTS                                #
     # ---------------------------------------------------------------------------- #
-    utils.view_webcam()
 
     # Visualise the live detection capability on the webcam
-    # utils.show_detection_webcam(trained_model)
-
+    # utils.view_webcam()
+    print("Running inference on webcam ...")
+    utils.run_detector_live(model)
