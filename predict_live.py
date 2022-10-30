@@ -3,7 +3,7 @@ predict.py
 
 30/10/2022
 
-Shows example usage of the trained model on individual example images with visualisations of it's output results
+Shows example usage of the trained model on live webcam video with detection boxes shown overlayed
 
 """
 
@@ -11,16 +11,9 @@ Shows example usage of the trained model on individual example images with visua
 import dataset
 import utils
 from tensorflow import keras
-# import tensorflow_hub as hub
 
 
 if __name__ == "__main__":
-    # ---------------------------------------------------------------------------- #
-    #                                  PARAMETERS                                  #
-    # ---------------------------------------------------------------------------- #
-    EXAMPLES_TO_SHOW = 10 # number of test detection examples to show
-
-
     # ---------------------------------------------------------------------------- #
     #                                   LOAD DATA                                  #
     # ---------------------------------------------------------------------------- #
@@ -38,15 +31,8 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     #                                 FINAL RESULTS                                #
     # ---------------------------------------------------------------------------- #
-    # Visualise the final results and calculate the accuracy of the detections
-    # utils.show_detection_examples(trained_model, test_data, EXAMPLES_TO_SHOW)
+    utils.view_webcam()
 
-    module_handle = "https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1" 
-    #@param ["https://tfhub.dev/google/openimages_v4/ssd/mobilenet_v2/1", "https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1"]
+    # Visualise the live detection capability on the webcam
+    # utils.show_detection_webcam(trained_model)
 
-    # detector = hub.load(module_handle).signatures['default']
-
-    detector = None
-    images_path = "data/images/"
-    output_path = "out/"
-    utils.run_detector(detector, images_path, output_path)
