@@ -10,8 +10,9 @@ Shows example usage of the trained model on individual example images with visua
 
 import dataset
 import utils
-from tensorflow import keras
+import tensorflow as tf
 # import tensorflow_hub as hub
+import os
 
 
 if __name__ == "__main__":
@@ -19,7 +20,8 @@ if __name__ == "__main__":
     #                                  PARAMETERS                                  #
     # ---------------------------------------------------------------------------- #
     EXAMPLES_TO_SHOW = 10 # number of test detection examples to show
-
+    images_path = "data/images/"
+    output_path = "out/"
 
     # ---------------------------------------------------------------------------- #
     #                                   LOAD DATA                                  #
@@ -44,9 +46,8 @@ if __name__ == "__main__":
     module_handle = "https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1" 
     #@param ["https://tfhub.dev/google/openimages_v4/ssd/mobilenet_v2/1", "https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1"]
 
-    # detector = hub.load(module_handle).signatures['default']
+    print("Loading model from local ...")
+    model = tf.saved_model.load("./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model")
 
-    detector = None
-    images_path = "data/images/"
-    output_path = "out/"
-    utils.run_detector(detector, images_path, output_path)
+    print("Running inference on static images ...")
+    utils.run_detector(model, images_path, output_path)

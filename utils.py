@@ -10,12 +10,97 @@ Contains extra utility functions to help with things like plotting charts, webca
 from pickle import FRAME
 import cv2
 import PIL
-from PIL import ImageFont, ImageColor
+from PIL import ImageFont, ImageColor, ImageDraw
 import matplotlib.pyplot as plt
 import numpy as np
 import time
 import tensorflow as tf
 import glob as glob
+
+
+# Load the COCO Label Map
+category_index = {
+    1: {'id': 1, 'name': 'person'},
+    2: {'id': 2, 'name': 'bicycle'},
+    3: {'id': 3, 'name': 'car'},
+    4: {'id': 4, 'name': 'motorcycle'},
+    5: {'id': 5, 'name': 'airplane'},
+    6: {'id': 6, 'name': 'bus'},
+    7: {'id': 7, 'name': 'train'},
+    8: {'id': 8, 'name': 'truck'},
+    9: {'id': 9, 'name': 'boat'},
+    10: {'id': 10, 'name': 'traffic light'},
+    11: {'id': 11, 'name': 'fire hydrant'},
+    13: {'id': 13, 'name': 'stop sign'},
+    14: {'id': 14, 'name': 'parking meter'},
+    15: {'id': 15, 'name': 'bench'},
+    16: {'id': 16, 'name': 'bird'},
+    17: {'id': 17, 'name': 'cat'},
+    18: {'id': 18, 'name': 'dog'},
+    19: {'id': 19, 'name': 'horse'},
+    20: {'id': 20, 'name': 'sheep'},
+    21: {'id': 21, 'name': 'cow'},
+    22: {'id': 22, 'name': 'elephant'},
+    23: {'id': 23, 'name': 'bear'},
+    24: {'id': 24, 'name': 'zebra'},
+    25: {'id': 25, 'name': 'giraffe'},
+    27: {'id': 27, 'name': 'backpack'},
+    28: {'id': 28, 'name': 'umbrella'},
+    31: {'id': 31, 'name': 'handbag'},
+    32: {'id': 32, 'name': 'tie'},
+    33: {'id': 33, 'name': 'suitcase'},
+    34: {'id': 34, 'name': 'frisbee'},
+    35: {'id': 35, 'name': 'skis'},
+    36: {'id': 36, 'name': 'snowboard'},
+    37: {'id': 37, 'name': 'sports ball'},
+    38: {'id': 38, 'name': 'kite'},
+    39: {'id': 39, 'name': 'baseball bat'},
+    40: {'id': 40, 'name': 'baseball glove'},
+    41: {'id': 41, 'name': 'skateboard'},
+    42: {'id': 42, 'name': 'surfboard'},
+    43: {'id': 43, 'name': 'tennis racket'},
+    44: {'id': 44, 'name': 'bottle'},
+    46: {'id': 46, 'name': 'wine glass'},
+    47: {'id': 47, 'name': 'cup'},
+    48: {'id': 48, 'name': 'fork'},
+    49: {'id': 49, 'name': 'knife'},
+    50: {'id': 50, 'name': 'spoon'},
+    51: {'id': 51, 'name': 'bowl'},
+    52: {'id': 52, 'name': 'banana'},
+    53: {'id': 53, 'name': 'apple'},
+    54: {'id': 54, 'name': 'sandwich'},
+    55: {'id': 55, 'name': 'orange'},
+    56: {'id': 56, 'name': 'broccoli'},
+    57: {'id': 57, 'name': 'carrot'},
+    58: {'id': 58, 'name': 'hot dog'},
+    59: {'id': 59, 'name': 'pizza'},
+    60: {'id': 60, 'name': 'donut'},
+    61: {'id': 61, 'name': 'cake'},
+    62: {'id': 62, 'name': 'chair'},
+    63: {'id': 63, 'name': 'couch'},
+    64: {'id': 64, 'name': 'potted plant'},
+    65: {'id': 65, 'name': 'bed'},
+    67: {'id': 67, 'name': 'dining table'},
+    70: {'id': 70, 'name': 'toilet'},
+    72: {'id': 72, 'name': 'tv'},
+    73: {'id': 73, 'name': 'laptop'},
+    74: {'id': 74, 'name': 'mouse'},
+    75: {'id': 75, 'name': 'remote'},
+    76: {'id': 76, 'name': 'keyboard'},
+    77: {'id': 77, 'name': 'cell phone'},
+    78: {'id': 78, 'name': 'microwave'},
+    79: {'id': 79, 'name': 'oven'},
+    80: {'id': 80, 'name': 'toaster'},
+    81: {'id': 81, 'name': 'sink'},
+    82: {'id': 82, 'name': 'refrigerator'},
+    84: {'id': 84, 'name': 'book'},
+    85: {'id': 85, 'name': 'clock'},
+    86: {'id': 86, 'name': 'vase'},
+    87: {'id': 87, 'name': 'scissors'},
+    88: {'id': 88, 'name': 'teddy bear'},
+    89: {'id': 89, 'name': 'hair drier'},
+    90: {'id': 90, 'name': 'toothbrush'},
+}
 
 
 def draw_bounding_box_on_image(image, ymin, xmin, ymax, xmax, color, font=PIL.ImageFont.load_default(), thickness=4, display_str_list=()):
@@ -89,18 +174,12 @@ def draw_boxes(image, boxes, class_names, scores, max_boxes=10, min_score=0.1):
     """
 
     colors = list(PIL.ImageColor.colormap.values())
-
-    try:
-        font = PIL.ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSansNarrow-Regular.ttf",
-                                25)
-    except IOError:
-        print("Font not found, using default font.")
-        font = PIL.ImageFont.load_default()
+    font = PIL.ImageFont.load_default()
 
     for i in range(min(boxes.shape[0], max_boxes)):
         if scores[i] >= min_score:
             ymin, xmin, ymax, xmax = tuple(boxes[i])
-            display_str = "{}: {}%".format(class_names[i].decode("ascii"), int(100 * scores[i]))
+            display_str = "{}: {}%".format(category_index[class_names[i]]["name"], int(100 * scores[i]))
             color = colors[hash(class_names[i]) % len(colors)]
             image_pil = PIL.Image.fromarray(np.uint8(image)).convert("RGB")
             draw_bounding_box_on_image( image_pil, ymin, xmin, ymax, xmax, color, font, display_str_list=[display_str])
@@ -124,45 +203,42 @@ def plot_predictions(image, predictions):
     # TODO: Implement ...
 
 
-def load_img(path):
-    img = tf.io.read_file(path)
-    img = tf.image.decode_jpeg(img, channels=3)
-    return img
+def run_detector(model, input_folder, output_folder, verbose=True):
+    i = 0
 
-def display_image(image):
-    fig = plt.figure(figsize=(20, 15))
-    plt.grid(False)
-    plt.imshow(image)
-
-def run_detector(detector, input_folder, output_folder, verbose=True):
     for path in glob.glob(input_folder + '*.*'): # get any file in that folder
-        img = load_img(path)
+        img = tf.io.read_file(path)
+        img = tf.image.decode_jpeg(img, channels=3)
+        img = img.numpy()
+        img = np.expand_dims(img, 0)
 
-        converted_img  = tf.image.convert_image_dtype(img, tf.float32)[tf.newaxis, ...]
         start_time = time.time()
-        result = detector(converted_img)
+        result = model(img)
         end_time = time.time()
 
         result = {key:value.numpy() for key,value in result.items()}
 
-        if verbose == True:
-            print("Found %d objects." % len(result["detection_scores"]))
-            print("Inference time: ", end_time-start_time)
-
         image_with_boxes = draw_boxes(
-            img.numpy(), result["detection_boxes"],
-            result["detection_class_entities"], result["detection_scores"])
+            np.squeeze(img), 
+            result["detection_boxes"][0],
+            result["detection_classes"][0],
+            result["detection_scores"][0],
+            max_boxes=10,
+            min_score=0.5)
+
+        if verbose == True:
+            # Show the output image
+            plt.figure(figsize=(20, 15))
+            plt.grid(False)
+            plt.imshow(image_with_boxes)
 
         # Save the output image
         output_path = output_folder + "out_" + "/".join(path.split("/")[-1:])
         plt.savefig(output_path)
+        plt.close()
 
-        if verbose == True:
-            # Show the output image
-            fig = plt.figure(figsize=(20, 15))
-            plt.grid(False)
-            plt.imshow(image_with_boxes)
-            plt.close()
+        print(i)
+        i = i + 1
 
 
 def view_webcam():
