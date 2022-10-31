@@ -16,6 +16,12 @@ import tensorflow as tf
 
 if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
+    #                                  PARAMETERS                                  #
+    # ---------------------------------------------------------------------------- #
+    labels_path = "data/mscoco_label_map.pbtxt"
+
+
+    # ---------------------------------------------------------------------------- #
     #                                   LOAD DATA                                  #
     # ---------------------------------------------------------------------------- #
     # Import data loader from dataset.py
@@ -38,4 +44,4 @@ if __name__ == "__main__":
     # Visualise the live detection capability on the webcam
     # utils.view_webcam()
     print("Running inference on webcam ...")
-    utils.run_detector_live(model)
+    utils.run_detector_live(model, labels_path)

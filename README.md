@@ -2,6 +2,11 @@
 
 An AI fruit scanner for supermarket checkouts
 
+#TODO:
+
+* Write model builder code
+* Writing training loop
+
 ---
 
 ## Project Overview
@@ -19,9 +24,9 @@ An AI fruit scanner for supermarket checkouts
 
 * Get fruit images
 * Label with label.py & store imgs & labels together on file
-* Load dalaset from file w/ dataset.py load_data()
+* Load dataset from file w/ dataset.py load_data()
 * Finetute a fast & light object detection algorithm pretrained on ImageNet (Fast RCNN, YOLO, etc.) and save to file w/ train. py
-* Load model & run live inference on webcam w/ predict. py
+* **[DONE] Load model & run live inference on webcam w/ predict. py**
 * After validating performance on laptop webcam, compress to be run on raspberry pi webcam
 * Build GUI user interface with sounds and mount raspberry pi for a realistic scanning demo
 
@@ -56,4 +61,4 @@ The following main dependancies were used in the project (see environment.yml to
 
 ---
 
-Made with ❤️
+<center> Made with ❤️ </center>

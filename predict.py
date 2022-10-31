@@ -18,8 +18,9 @@ if __name__ == "__main__":
     #                                  PARAMETERS                                  #
     # ---------------------------------------------------------------------------- #
     EXAMPLES_TO_SHOW = 10 # number of test detection examples to show
-    images_path = "data/images/"
-    output_path = "out/"
+    images_path = "data/alex/test/"
+    output_path = "data/alex/out/"
+    labels_path = "data/mscoco_label_map.pbtxt"
 
     # ---------------------------------------------------------------------------- #
     #                                   LOAD DATA                                  #
@@ -43,4 +44,4 @@ if __name__ == "__main__":
     # utils.show_detection_examples(trained_model, test_data, EXAMPLES_TO_SHOW)
 
     print("Running inference on static images ...")
-    utils.run_detector(model, images_path, output_path)
+    utils.run_detector(model, images_path, output_path, labels_path)
