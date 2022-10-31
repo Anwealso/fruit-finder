@@ -21,7 +21,7 @@ import glob as glob
 import dataset as dataset
 
 
-def draw_bounding_box_on_image(image, ymin, xmin, ymax, xmax, color, font=PIL.ImageFont.load_default(), thickness=4, display_str_list=()):
+def draw_bounding_box_on_image(image, ymin, xmin, ymax, xmax, color, thickness=4, display_str_list=()):
     """
     Adds a single bounding box to an image.
 
@@ -49,9 +49,17 @@ def draw_bounding_box_on_image(image, ymin, xmin, ymax, xmax, color, font=PIL.Im
             width=thickness,
             fill=color)
 
+    # Set the font size to be reasonably readable
+    fontsize = int(im_height/20)
+    try:
+        font = ImageFont.truetype('/System/Library/Fonts/Helvetica.ttc', fontsize)
+    except IOError:
+        font = ImageFont.load_default()
+
     # If the total height of the display strings added to the top of the bounding
     # box exceeds the top of the image, stack the strings below the bounding box
     # instead of above.
+
     display_str_heights = [font.getsize(ds)[1] for ds in display_str_list]
     # Each display_str has a top and bottom margin of 0.05x.
     total_display_str_height = (1 + 2 * 0.05) * sum(display_str_heights)
@@ -78,11 +86,12 @@ def draw_bounding_box_on_image(image, ymin, xmin, ymax, xmax, color, font=PIL.Im
 def draw_boxes(image, boxes, class_names, scores, max_boxes=10, min_score=0.1):
     """
     Overlay labeled boxes on an image with formatted scores and label names.
+    TODO: Fix tiny unreadable text for class labels on large images
 
         Parameters:
             image (???): An image
             boxes (???): List of bounding boxes in ??? format
-            class_names (???): List of bounding boxes in ??? format
+            class_names (???): List of class names
             scores (???): Confidence scores of each box
             (optional) max_boxes (???): Max number of boxes to draw
             (optional) min_score (???): Minimum confidence score of a prediction for us to plot its box on the image
@@ -92,15 +101,14 @@ def draw_boxes(image, boxes, class_names, scores, max_boxes=10, min_score=0.1):
     """
 
     colors = list(PIL.ImageColor.colormap.values())
-    font = PIL.ImageFont.load_default()
 
     for i in range(min(boxes.shape[0], max_boxes)):
         if scores[i] >= min_score:
             ymin, xmin, ymax, xmax = tuple(boxes[i])
-            display_str = "{}: {}%".format(dataset.get_labels()[class_names[i]]["name"], int(100 * scores[i]))
+            display_str = "{}: {}%".format(class_names[i], int(100 * scores[i]))
             color = colors[hash(class_names[i]) % len(colors)]
             image_pil = PIL.Image.fromarray(np.uint8(image)).convert("RGB")
-            draw_bounding_box_on_image( image_pil, ymin, xmin, ymax, xmax, color, font, display_str_list=[display_str])
+            draw_bounding_box_on_image( image_pil, ymin, xmin, ymax, xmax, color, display_str_list=[display_str])
             np.copyto(image, np.array(image_pil))
 
     return image
@@ -121,25 +129,32 @@ def plot_predictions(image, predictions):
     # TODO: Implement ...
 
 
-def run_detector(model, input_folder, output_folder, verbose=True):
-    i = 0
+def run_detector(model, input_folder, output_folder, labels_file, verbose=True):
+    """
+    TODO: Document me!
+    
+    """
 
+    i = 0
     for path in glob.glob(input_folder + '*.*'): # get any file in that folder
+        # Reads in image
         img = tf.io.read_file(path)
         img = tf.image.decode_jpeg(img, channels=3)
         img = img.numpy()
         img = np.expand_dims(img, 0)
-
-        start_time = time.time()
+        
+        # Run inference
         result = model(img)
-        end_time = time.time()
-
         result = {key:value.numpy() for key,value in result.items()}
+
+        # Convert Class Indices to Class Names
+        labels_dict = dataset.get_labels(labels_file)
+        class_names = [list(labels_dict.keys())[list(labels_dict.values()).index(int(item))] for item in result["detection_classes"][0]]
 
         image_with_boxes = draw_boxes(
             np.squeeze(img), 
             result["detection_boxes"][0],
-            result["detection_classes"][0],
+            class_names,
             result["detection_scores"][0],
             max_boxes=10,
             min_score=0.5)
@@ -166,7 +181,12 @@ def run_detector(model, input_folder, output_folder, verbose=True):
 
 
 
-def run_detector_live(model):
+def run_detector_live(model, labels_file):
+    """
+    TODO: Document me!
+    
+    """
+
 
     print("Connecting to webcam ...")
     # Define a video capture object
@@ -176,15 +196,20 @@ def run_detector_live(model):
     while(True):
         # Capture the video frame by frame
         ret, frame = vid.read()
+        img = np.expand_dims(frame, 0)
     
         # Run inference on image
-        img = np.expand_dims(frame, 0)
         result = model(img)
         result = {key:value.numpy() for key,value in result.items()}
+
+        # Convert Class Indices to Class Names
+        labels_dict = dataset.get_labels(labels_file)
+        class_names = [list(labels_dict.keys())[list(labels_dict.values()).index(int(item))] for item in result["detection_classes"][0]]
+
         image_with_boxes = draw_boxes(
             np.squeeze(img), 
             result["detection_boxes"][0],
-            result["detection_classes"][0],
+            class_names,
             result["detection_scores"][0],
             max_boxes=10,
             min_score=0.5)
