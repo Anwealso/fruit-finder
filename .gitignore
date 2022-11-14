@@ -1,5 +1,8 @@
 .DS_Store
 __pycache__
+
 test/
 models/
-object_detection/
+data/
+
+lib/
