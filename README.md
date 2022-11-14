@@ -4,7 +4,7 @@ An AI fruit scanner for supermarket checkouts
 
 #TODO:
 
-* Write model builder code
+* Write model builder (/ loading from file) code (model.py)
 * Writing training loop
 
 ---
@@ -40,7 +40,7 @@ An AI fruit scanner for supermarket checkouts
 2. Create a clean conda environment and activate it
 3. Install all of the required packages using `conda env create -f environment.yml --name fruitfinder` (see full dependancy list below)
 4. Download the resnet50 model from [here](http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8.tar.gz). Note: various other COCO models accessible [here](https://tfhub.dev/tensorflow/collections/object_detection/1)
-
+E
 ### Usage
 
 * Activate the conda environment by running `conda activate fruitfinder`
@@ -58,6 +58,29 @@ The following main dependancies were used in the project (see environment.yml to
 * PIL / pillow (version 9.1.0)
 * imageio (version 2.22.1)
 * skimage (version 0.19.3)
+
+---
+
+## Data Labelling
+
+### Installing LabelImg
+
+#### MacOS Anaconda
+
+```bash
+conda install pyqt=5
+conda install lxml
+make qt5py3
+```
+
+See guide on [labelImg GitHub](https://github.com/heartexlabs/labelImg) for more installation options
+
+### Using LabelImg
+
+```bash
+python labelImg.py
+python labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
+```
 
 ---
 
