@@ -256,21 +256,20 @@ def get_annotations(dataset_path):
 
 def load_dataset(dataset_path, max_images=None, verbose=False):
     """
-    Loads the OASIS dataset of brain MRI images
+    Loads the dataset at he given path
 
         Parameters:
             (optional) max_images (int): The maximum number of images of the dataset to be used (default=None)
             (optional) verbose (bool): Whether a description of the dataset should be printed after it has loaded
 
         Returns:
-            train_data (ndarray): Numpy array of image data for training
-            test_data (ndarray): Numpy array of image data testing
+            datasets (tuple): A tuple containing the three datasets (train_dataset, validate_dataset, test_dataset). Each dataset is a dictionary of {'images': <ndarray>, 'labels': <list>}
     """
 
     print("Loading dataset...")
 
     # File paths
-    # TODO: Update this to work for class images in multiple sub folders
+    # TODO: Update this to work for multiple classes (multiple class image sub folders)
     test_path = dataset_path + "images/test/duck"
     train_path = dataset_path + "images/train/duck"
     # validate_path = images_path + "validate/"
@@ -316,12 +315,12 @@ def load_dataset(dataset_path, max_images=None, verbose=False):
     # Load the training data labels from file or annotate them now
     annotations = get_annotations(dataset_path)
 
-    # Convert to corner-coord-only gt_boxes format
-    gt_boxes = list()
+    # Convert to corner-coord-only train_gt_boxes format
+    train_gt_boxes = list()
     for i in range(0, len(annotations)):
         row = annotations.loc[i, ['x_min', 'y_min', 'x_max', 'y_max']]
         box_coords_np = row.to_numpy(dtype=np.float32)
-        gt_boxes.append(box_coords_np)
+        train_gt_boxes.append(box_coords_np)
 
 
     # ------------------------- Prepare data for training ------------------------ #
@@ -347,7 +346,7 @@ def load_dataset(dataset_path, max_images=None, verbose=False):
     gt_classes_one_hot_tensors = []
     gt_box_tensors = []
 
-    for (train_image_np, gt_box_np) in zip(train_images_np, gt_boxes):
+    for (train_image_np, gt_box_np) in zip(train_images_np, train_gt_boxes):
         train_image_tensors.append(tf.expand_dims(tf.convert_to_tensor(train_image_np, dtype=tf.float32), axis=0))
 
         gt_box_tensors.append(tf.convert_to_tensor(gt_box_np, dtype=tf.float32))
@@ -373,7 +372,7 @@ def load_dataset(dataset_path, max_images=None, verbose=False):
             # TODO: Need to rework this shit to work for more than 1 detection box per image
             plot_detections(
                 train_images_np[idx],
-                [gt_boxes[idx]],
+                [train_gt_boxes[idx]],
                 ["duck"],
                 dummy_scores, 
                 category_index)
@@ -387,7 +386,9 @@ def load_dataset(dataset_path, max_images=None, verbose=False):
         print(f"Annotations:\n{annotations}")
         print()
 
-        print(f"Training Data:\n    Images: ({type(train_images_np)}): {np.shape(train_images_np)}\n    Labels: ({type(gt_boxes)}): {np.shape(gt_boxes)}")
+        print(f"Training Data:")
+        print(f"    Images:  ({type(train_images_np)})  {np.shape(train_images_np)}")
+        print(f"    Labels:  ({type(train_gt_boxes)})  {np.shape(train_gt_boxes)}")
 
         # print(f"###test_data ({type(test_data)}): {np.shape(test_data)}###")
         # print(f"###validate_data ({type(validate_data)}): {np.shape(validate_data)}###")
@@ -395,7 +396,7 @@ def load_dataset(dataset_path, max_images=None, verbose=False):
 
 
     # TODO: adapt this code so we can return the train, validate and test datasets
-    return (train_images_np, gt_boxes) # (train_data, test_data)
+    return ({"images": train_images_np, "labels": train_gt_boxes}, {}, {})
 
 
 if __name__ == "__main__":
