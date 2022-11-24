@@ -18,7 +18,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 import imageio.v2 as imageio
-import os as os
+# import object_detection.utils as tfutils
+# from object_detection.builders import model_builder
 
 
 class VQVAETrainer(keras.models.Model):
@@ -169,7 +170,9 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     #                                HYPERPARAMETERS                               #
     # ---------------------------------------------------------------------------- #
-    DATASET_PATH = "data/ducky/"
+    DATASET_PATH = "./data/ducky/"
+    MODEL_PATH = "./models/ssd_mobilenet_v2_2"
+
     NUM_TRAINING_EXAMPLES = None
 
     TRAINING_EPOCHS = 20
@@ -185,25 +188,90 @@ if __name__ == "__main__":
     #                                   LOAD DATA                                  #
     # ---------------------------------------------------------------------------- #
     # Import data loader from dataset.py
-    (train_data, test_data) = dataset.load_dataset(DATASET_PATH, max_images=NUM_TRAINING_EXAMPLES, verbose=True)
+    (train_images, gt_boxes) = dataset.load_dataset(DATASET_PATH, max_images=NUM_TRAINING_EXAMPLES, verbose=True)
 
 
-    # ---------------------------------------------------------------------------- #
-    #                                  BUILD MODEL                                 #
-    # ---------------------------------------------------------------------------- #
-    # Create the model (wrapped in the training class to handle performance metrics logging)
-    vqvae_trainer = VQVAETrainer(data_variance, latent_dim=NUM_LATENT_DIMS, num_embeddings=NUM_EMBEDDINGS)
-    vqvae_trainer.compile(optimizer=keras.optimizers.Adam())
+    quit()
     
-    vqvae_trainer.vqvae.summary()
+    # ---------------------------------------------------------------------------- #
+    #                            LOAD PRE-TRAINED MODEL                            #
+    # ---------------------------------------------------------------------------- #
+    # Import trained and saved model from file
+    print("Loading model ...")
+    # model = tf.saved_model.load("./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model")
+    model = tf.saved_model.load(MODEL_PATH)
+
+
+    # ---------------------------------------------------------------------------- #
+    #                      MODIFY MODEL TO FIT DESIRED CLASSES                     #
+    # ---------------------------------------------------------------------------- #
+    # Remove the final classification layer and replace it with a basic randomly 
+    # initialised classifier layer that classifies for our classes
+    # TODO: Implement
+
+    tf.keras.backend.clear_session()
+
+    print('Building model and restoring weights for fine-tuning...', flush=True)
+    num_classes = 1
+    pipeline_config = 'models/research/object_detection/configs/tf2/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8.config'
+    checkpoint_path = 'models/research/object_detection/test_data/checkpoint/ckpt-0'
+
+    # Load pipeline config and build a detection model.
+    #
+    # Since we are working off of a COCO architecture which predicts 90
+    # class slots by default, we override the `num_classes` field here to be just
+    # one (for our new rubber ducky class).
+    configs = tfutils.config_util.get_configs_from_pipeline_file(pipeline_config)
+    model_config = configs['model']
+    model_config.ssd.num_classes = num_classes
+    model_config.ssd.freeze_batchnorm = True
+    detection_model = model_builder.build(
+        model_config=model_config, is_training=True)
+
+    # Set up object-based checkpoint restore --- RetinaNet has two prediction
+    # `heads` --- one for classification, the other for box regression.  We will
+    # restore the box regression head but initialize the classification head
+    # from scratch (we show the omission below by commenting out the line that
+    # we would add if we wanted to restore both heads)
+    fake_box_predictor = tf.compat.v2.train.Checkpoint(
+        _base_tower_layers_for_heads=detection_model._box_predictor._base_tower_layers_for_heads,
+        # _prediction_heads=detection_model._box_predictor._prediction_heads,
+        #    (i.e., the classification head that we *will not* restore)
+        _box_prediction_head=detection_model._box_predictor._box_prediction_head,
+        )
+    fake_model = tf.compat.v2.train.Checkpoint(
+            _feature_extractor=detection_model._feature_extractor,
+            _box_predictor=fake_box_predictor)
+    ckpt = tf.compat.v2.train.Checkpoint(model=fake_model)
+    ckpt.restore(checkpoint_path).expect_partial()
+
+    # Run model through a dummy image so that variables are created
+    image, shapes = detection_model.preprocess(tf.zeros([1, 640, 640, 3]))
+    prediction_dict = detection_model.predict(image, shapes)
+    _ = detection_model.postprocess(prediction_dict, shapes)
+    print('Weights restored!')
+
+
 
     # ---------------------------------------------------------------------------- #
     #                                 RUN TRAINING                                 #
     # ---------------------------------------------------------------------------- #
+    # Finetune the modified pre-trained model on the smaller dataset containing 
+    # examples of our classes
+    # TODO: Implement
+
+
+    # Create the model (wrapped in the training class to handle performance metrics logging)
+    # vqvae_trainer = VQVAETrainer(data_variance, latent_dim=NUM_LATENT_DIMS, num_embeddings=NUM_EMBEDDINGS)
+    # vqvae_trainer.compile(optimizer=keras.optimizers.Adam())
+    # vqvae_trainer.vqvae.summary()
+
+
     print("Training model...")
     # Run training, plotting losses and metrics throughout
-    history = vqvae_trainer.fit(train_data, epochs=TRAINING_EPOCHS, batch_size=BATCH_SIZE, callbacks=[ProgressImagesCallback(train_data, validate_data)])
+    # history = vqvae_trainer.fit(train_data, epochs=TRAINING_EPOCHS, batch_size=BATCH_SIZE, callbacks=[ProgressImagesCallback(train_data, validate_data)])
 
+    quit()
 
     # ---------------------------------------------------------------------------- #
     #                                SAVE THE MODEL                                #

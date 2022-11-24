@@ -2,8 +2,7 @@
 
 An AI fruit scanner for supermarket checkouts
 
-#TODO:
-
+* Should probs do a complete re-think of middle model / training code using the eager_few_shot_od_training_tf2_colab.ipynb code as a base
 * Write model builder (/ loading from file) code (model.py)
 * Writing training loop
 
@@ -23,12 +22,17 @@ An AI fruit scanner for supermarket checkouts
 ### Development Roadmap
 
 * Get fruit images
-* Label with label.py & store imgs & labels together on file
-* Load dataset from file w/ dataset.py load_data()
+* **[DONE] Label with label.py & store imgs & labels together on file**
+* **[DONE]Load training dataset from file w/ dataset.py load_data()**
+* Load test dataset from file w/ dataset.py load_data()
 * Finetute a fast & light object detection algorithm pretrained on ImageNet (Fast RCNN, YOLO, etc.) and save to file w/ train. py
 * **[DONE] Load model & run live inference on webcam w/ predict. py**
 * After validating performance on laptop webcam, compress to be run on raspberry pi webcam
 * Build GUI user interface with sounds and mount raspberry pi for a realistic scanning demo
+
+TODO:
+
+* Update the data loading pipeline to allow for mulitple detection boxes per training image
 
 ---
 
@@ -40,7 +44,7 @@ An AI fruit scanner for supermarket checkouts
 2. Create a clean conda environment and activate it
 3. Install all of the required packages using `conda env create -f environment.yml --name fruitfinder` (see full dependancy list below)
 4. Download the resnet50 model from [here](http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8.tar.gz). Note: various other COCO models accessible [here](https://tfhub.dev/tensorflow/collections/object_detection/1)
-E
+
 ### Usage
 
 * Activate the conda environment by running `conda activate fruitfinder`

@@ -18,9 +18,10 @@ if __name__ == "__main__":
     #                                  PARAMETERS                                  #
     # ---------------------------------------------------------------------------- #
     EXAMPLES_TO_SHOW = 10 # number of test detection examples to show
-    images_path = "data/alex/test/"
-    output_path = "data/alex/out/"
-    labels_path = "data/mscoco_label_map.pbtxt"
+    IMAGES_PATH = "data/alex/images/test/"
+    OUTPUT_PATH = "data/alex/out/"
+    LABELS_PATH = "data/alex/mscoco_label_map.pbtxt"
+    MODEL_PATH = "./models/ssd_mobilenet_v2_2"
 
     # ---------------------------------------------------------------------------- #
     #                                   LOAD DATA                                  #
@@ -35,7 +36,7 @@ if __name__ == "__main__":
     # Import trained and saved model from file
     print("Loading model ...")
     # model = tf.saved_model.load("./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model")
-    model = tf.saved_model.load("./models/ssd_mobilenet_v2_2")
+    model = tf.saved_model.load(MODEL_PATH)
 
     # ---------------------------------------------------------------------------- #
     #                                 FINAL RESULTS                                #
@@ -44,4 +45,4 @@ if __name__ == "__main__":
     # utils.show_detection_examples(trained_model, test_data, EXAMPLES_TO_SHOW)
 
     print("Running inference on static images ...")
-    utils.run_detector(model, images_path, output_path, labels_path)
+    utils.run_detector(model, IMAGES_PATH, OUTPUT_PATH, LABELS_PATH)

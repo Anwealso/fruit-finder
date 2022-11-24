@@ -18,8 +18,8 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     #                                  PARAMETERS                                  #
     # ---------------------------------------------------------------------------- #
-    labels_path = "data/mscoco_label_map.pbtxt"
-
+    LABELS_PATH = "./data/alex/mscoco_label_map.pbtxt"
+    MODEL_PATH = "./models/ssd_mobilenet_v2_2"
 
     # ---------------------------------------------------------------------------- #
     #                                   LOAD DATA                                  #
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     # Import trained and saved model from file
     print("Loading model ...")
     # model = tf.saved_model.load("./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model")
-    model = tf.saved_model.load("./models/ssd_mobilenet_v2_2")
+    model = tf.saved_model.load(MODEL_PATH)
 
 
     # ---------------------------------------------------------------------------- #
@@ -44,4 +44,4 @@ if __name__ == "__main__":
     # Visualise the live detection capability on the webcam
     # utils.view_webcam()
     print("Running inference on webcam ...")
-    utils.run_detector_live(model, labels_path)
+    utils.run_detector_live(model, LABELS_PATH)
