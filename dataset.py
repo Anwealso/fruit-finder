@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import tensorflow as tf
 import utils as utils
-from lib.object_detection.utils import label_map_util
+from object_detection.utils import label_map_util
 # TODO: fix thes messed up path importing issue
 
 
@@ -254,7 +254,7 @@ def get_annotations(dataset_path):
     return gt_boxes
 
 
-def load_dataset(dataset_path, max_images=None, verbose=False):
+def load_dataset(dataset_path, max_images=None, verbose=0):
     """
     Loads the dataset at he given path
 
@@ -265,8 +265,6 @@ def load_dataset(dataset_path, max_images=None, verbose=False):
         Returns:
             datasets (tuple): A tuple containing the three datasets (train_dataset, validate_dataset, test_dataset). Each dataset is a dictionary of {'images': <ndarray>, 'labels': <list>}
     """
-
-    print("Loading dataset...")
 
     # File paths
     # TODO: Update this to work for multiple classes (multiple class image sub folders)
@@ -280,7 +278,6 @@ def load_dataset(dataset_path, max_images=None, verbose=False):
     train_data = []
     # validate_data = []
     datasets = [test_data, train_data]#, validate_data]
-    print(train_data)
 
     # ------------------------------ Load the images ----------------------------- #
 
@@ -354,13 +351,12 @@ def load_dataset(dataset_path, max_images=None, verbose=False):
         zero_indexed_groundtruth_classes = tf.convert_to_tensor(np.ones(shape=[gt_box_np.shape[0]], dtype=np.int32) - label_id_offset)
 
         gt_classes_one_hot_tensors.append(tf.one_hot(zero_indexed_groundtruth_classes, num_classes))
-
-    print('Done prepping data.')
+    
 
     # ----------------------- visualize the rubber duckies ----------------------- #
 
     # Fix the fact that the ret boxes are plotting like garbage on the images
-    if verbose == True:
+    if verbose == 2:
         dummy_scores = np.array([1.0], dtype=np.float32)  # give boxes a score of 100%
         images_to_show = 5
 
@@ -379,8 +375,8 @@ def load_dataset(dataset_path, max_images=None, verbose=False):
 
         plt.show()
 
-    # --------------------------------- OLD CODE --------------------------------- #
-    if verbose == True:
+    # --------------------------- SHOW DATASET SUMMARY --------------------------- #
+    if verbose >= 1:
         # Debug dataset loading
         print()
         print(f"Annotations:\n{annotations}")
@@ -392,7 +388,7 @@ def load_dataset(dataset_path, max_images=None, verbose=False):
 
         # print(f"###test_data ({type(test_data)}): {np.shape(test_data)}###")
         # print(f"###validate_data ({type(validate_data)}): {np.shape(validate_data)}###")
-        print('\n\n')
+        print()
 
 
     # TODO: adapt this code so we can return the train, validate and test datasets

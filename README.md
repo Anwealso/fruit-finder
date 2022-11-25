@@ -45,6 +45,22 @@ TODO:
 3. Install all of the required packages using `conda env create -f environment.yml --name fruitfinder` (see full dependancy list below)
 4. Download the resnet50 model from [here](http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8.tar.gz). Note: various other COCO models accessible [here](https://tfhub.dev/tensorflow/collections/object_detection/1)
 
+<!-- Methods of getting object_detection tools working:
+
+1. (NOT WORKING) Add the object_detection library to the conda env path by doing the following:
+![this guide](conda-path-guide.png)
+
+2. (WORKING SO FAR) Maually add slim/ and object_detection/ into the site-packages of the conda env -->
+
+### Installing the Object Detection API
+
+```bash
+cd models/research/
+protoc object_detection/protos/*.proto --python_out=.
+cp object_detection/packages/tf2/setup.py .
+python -m pip install --no-deps  .
+```
+
 ### Usage
 
 * Activate the conda environment by running `conda activate fruitfinder`
@@ -85,6 +101,18 @@ See guide on [labelImg GitHub](https://github.com/heartexlabs/labelImg) for more
 python labelImg.py
 python labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 ```
+
+---
+
+## Other Resources
+
+https://github.com/tensorflow/models/issues/10499
+
+https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/
+
+https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md
+
+
 
 ---
 
