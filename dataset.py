@@ -94,8 +94,8 @@ def annotate_dataset(dataset_path, images_folder_path, annotations_folder_path):
     
     # Run labelImg utility
     print("Opening labelImg ...")
-    print(f"python ./lib/labelImg/labelImg.py {images_folder_path} {labelimg_classes_path} {annotations_folder_path}")
-    os.system(f"python ./lib/labelImg/labelImg.py {images_folder_path} {labelimg_classes_path} {annotations_folder_path}")
+    print(f"python .\\lib\\labelImg\\labelImg.py {images_folder_path} {labelimg_classes_path} {annotations_folder_path}")
+    os.system(f"python .\\lib\\labelImg\\labelImg.py {images_folder_path} {labelimg_classes_path} {annotations_folder_path}")
 
 
 def xml2csv(location, dataset_segment):
@@ -104,7 +104,7 @@ def xml2csv(location, dataset_segment):
 
         Parameters:
             location (str): a path to the data labels for images of a specific 
-                class and dataset segment, e.g. DATASETNAME/labels/train/CLASSNAME/
+                class and dataset segment, e.g. DATASETNAME\\labels\\train\\CLASSNAME\\
             dataset_segment (str): the segment of the dataset we are 
                 processing (train, validate, or test)
 
@@ -129,7 +129,7 @@ def xml2csv(location, dataset_segment):
         if file.endswith(".xml"):
 
             # Get the file name
-            file_whole_name = f"{location}/{file}"
+            file_whole_name = f"{location}\\{file}"
 
             # Open the xml name
             tree = ET.parse(file_whole_name)
@@ -148,10 +148,10 @@ def xml2csv(location, dataset_segment):
                 temp_csv = [str(dataset_segment)]
 
                 # Image path
-                image_location = location.split("/")
+                image_location = location.split("\\")
                 image_location[-3] = "images"
-                image_location = "/".join(image_location)
-                image_path = f"{image_location}/{os.path.splitext(file)[0]}.jpg"
+                image_location = "\\".join(image_location)
+                image_path = f"{image_location}\\{os.path.splitext(file)[0]}.jpg"
                 temp_csv.append(image_path)
 
                 # Class label
@@ -187,7 +187,7 @@ def load_labels_from_file(location):
     Loads the labels for each of the images (box size, position and class) in each of the train, validate and test datasets
     
         Parameters:
-            location (str): the path to the base labels folder (labels/)
+            location (str): the path to the base labels folder (labels\\)
 
         Returns:
             res (pd.Dataframe): The labels
@@ -199,15 +199,15 @@ def load_labels_from_file(location):
     # Get all the file in dir
     for training_type_dir in os.listdir(location):
         # Get the dirname
-        dir_name = f"{location}/{training_type_dir}"
+        dir_name = f"{location}\\{training_type_dir}"
         # Check whether is dir
         if os.path.isdir(dir_name):
             # Process the files
             for class_name in os.listdir(dir_name):
                 # Check whether this file is dir, if so dont process it
-                if os.path.isdir(f"{dir_name}/{class_name}"):
+                if os.path.isdir(f"{dir_name}\\{class_name}"):
                     # Convert the chosen extension to csv
-                    res.extend(xml2csv(f"{dir_name}/{class_name}", training_type_dir))
+                    res.extend(xml2csv(f"{dir_name}\\{class_name}", training_type_dir))
 
     # Get the result as a dataframe to return
     res_csv = pd.DataFrame(res,
@@ -231,20 +231,20 @@ def get_annotations(dataset_path):
 
     gt_boxes = []
 
-    train_images_subfolders = glob.glob(dataset_path + "images/train/"+  "*")
+    train_images_subfolders = glob.glob(dataset_path + "images\\train\\"+  "*")
     class_names = list()
 
     for subfolder in train_images_subfolders:
-        class_names.append(subfolder.split("/")[-1])
+        class_names.append(subfolder.split("\\")[-1])
 
     for class_name in class_names:
         # Do the annotation now if not already done
-        training_num_images = len(glob.glob(dataset_path + f"images/train/{class_name}/"+  "*"))
-        training_num_labels = len(glob.glob(dataset_path + f"labels/train/{class_name}/"+  "*"))
+        training_num_images = len(glob.glob(dataset_path + f"images\\train\\{class_name}\\"+  "*"))
+        training_num_labels = len(glob.glob(dataset_path + f"labels\\train\\{class_name}\\"+  "*"))
 
         if training_num_labels != training_num_images:
             # If training annotations dont already exist, make them now...
-            annotate_dataset(dataset_path, dataset_path + f"images/train/{class_name}", dataset_path + f"labels/train/{class_name}")
+            annotate_dataset(dataset_path, dataset_path + f"images\\train\\{class_name}", dataset_path + f"labels\\train\\{class_name}")
         else:
             print(f"Training data already annotated for class: {class_name}")
 
@@ -268,9 +268,9 @@ def load_dataset(dataset_path, max_images=None, verbose=0):
 
     # File paths
     # TODO: Update this to work for multiple classes (multiple class image sub folders)
-    test_path = dataset_path + "images/test/duck"
-    train_path = dataset_path + "images/train/duck"
-    # validate_path = images_path + "validate/"
+    test_path = dataset_path + "images\\test\\duck"
+    train_path = dataset_path + "images\\train\\duck"
+    # validate_path = images_path + "validate\\"
     dataset_paths = [test_path, train_path]#, validate_path]
 
     # Set up the lists we will load our data into
@@ -396,5 +396,7 @@ def load_dataset(dataset_path, max_images=None, verbose=0):
 
 
 if __name__ == "__main__":
+    DATASET_PATH = ".\\data\\ducky\\"
+
     # Run a test
-    load_dataset(max_images=1000)
+    load_dataset(DATASET_PATH, max_images=1000)

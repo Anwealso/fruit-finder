@@ -170,8 +170,8 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     #                                HYPERPARAMETERS                               #
     # ---------------------------------------------------------------------------- #
-    DATASET_PATH = "./data/ducky/"
-    MODEL_PATH = "./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/"
+    DATASET_PATH = ".\\data\\ducky\\"
+    MODEL_PATH = ".\\models\\ssd_resnet50_v1_fpn_640x640_coco17_tpu-8\\"
 
     MAX_TRAINING_EXAMPLES = None
 
@@ -198,8 +198,8 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     # Import trained and saved model from file
     # print("Loading model ...")
-    # # model = tf.saved_model.load("./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model")
-    # model = tf.saved_model.load(MODEL_PATH + "saved_model/")
+    # # model = tf.saved_model.load(".\\models\\ssd_resnet50_v1_fpn_640x640_coco17_tpu-8\\saved_model")
+    # model = tf.saved_model.load(MODEL_PATH + "saved_model\\")
 
     # print(type(model))
     # print(model)
@@ -225,8 +225,8 @@ if __name__ == "__main__":
 
     print('Building model and restoring weights for fine-tuning...', flush=True)
     num_classes = 1
-    pipeline_config = MODEL_PATH + '/pipeline.config'
-    checkpoint_path = MODEL_PATH + '/checkpoint/ckpt-0'
+    pipeline_config = MODEL_PATH + '\\pipeline.config'
+    checkpoint_path = MODEL_PATH + '\\checkpoint\\ckpt-0'
 
     # Load pipeline config and build a detection model.
     #
@@ -294,7 +294,7 @@ if __name__ == "__main__":
     trained_vqvae_model = vqvae_trainer.vqvae
 
     # Save the model to file as a tensorflow SavedModel
-    trained_vqvae_model.save("./vqvae_saved_model")
+    trained_vqvae_model.save(".\\vqvae_saved_model")
 
 
     # ---------------------------------------------------------------------------- #

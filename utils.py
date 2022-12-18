@@ -166,7 +166,7 @@ def run_detector(model, input_folder, output_folder, labels_file, verbose=True):
             plt.imshow(image_with_boxes)
 
         # Save the output image
-        output_path = output_folder + "out_" + "/".join(path.split("/")[-1:])
+        output_path = output_folder + "out_" + "\\".join(path.split("\\")[-1:])
         plt.savefig(output_path)
         plt.close()
 
