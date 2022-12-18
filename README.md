@@ -53,8 +53,28 @@ See included installation guide for relevant platform.
 ## Finding Pretrained Models
 
 - Look on the [TF Model Hub](https://tfhub.dev/s?module-type=image-object-detection&tf-version=tf2)
+- Or on [TF2 Detection Model Zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md)
 
-## Data Labelling
+## Data Labelling (Label Studio <- new way)
+
+Check out [their website](https://labelstud.io/)
+
+Install with:
+```bash
+# Install the package
+# into python virtual environment
+pip install -U label-studio
+# Launch it!
+label-studio
+```
+
+
+## Data Labelling (LabelImg <- old way)
+
+First clone the labelImg repo into ./lib/
+```bash
+git clone https://github.com/heartexlabs/labelImg.git
+```
 
 ### Installing LabelImg (for MacOS + Anaconda)
 
@@ -64,12 +84,22 @@ conda install lxml
 make qt5py3
 ```
 
-#### Windows Anaconda
+From inside labelImg folder:
+```
+python -m pip install .  
+```
+
+### Installing LabelImg (for Windows + Anaconda)
 
 ```bash
 conda install pyqt=5;
 conda install -c anaconda lxml;
 pyrcc5 -o libs/resources.py resources.qrc;
+```
+
+From inside labelImg folder:
+```
+python -m pip install .  
 ```
 
 See guide on [labelImg GitHub](https://github.com/heartexlabs/labelImg) for more installation options

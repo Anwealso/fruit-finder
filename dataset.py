@@ -23,41 +23,6 @@ from object_detection.utils import label_map_util
 # TODO: fix thes messed up path importing issue
 
 
-def plot_detections(image_np, boxes, classes, scores, category_index, figsize=(12, 16), image_name=None):
-
-    """Wrapper function to visualize detections.
-
-    Args:
-        image_np: uint8 numpy array with shape (img_height, img_width, 3)
-        boxes: a numpy array of shape [N, 4]
-        classes: a numpy array of shape [N]. Note that class indices are 1-based,
-        and match the keys in the label map.
-        scores: a numpy array of shape [N] or None.  If scores=None, then
-        this function assumes that the boxes to be plotted are groundtruth
-        boxes and plot all boxes as black with no classes or scores.
-        category_index: a dict containing category dictionaries (each holding
-        category index `id` and category name `name`) keyed by category indices.
-        figsize: size for the figure.
-        image_name: a name for the image file.
-    """
-    image_np_with_annotations = image_np.copy()
-
-    utils.draw_boxes(
-        image_np_with_annotations,
-        boxes,
-        classes,
-        scores,
-        # category_index,
-        # use_normalized_coordinates=True,
-        min_score=0.8)
-
-    if image_name:
-        plt.imsave(image_name, image_np_with_annotations)
-    else:
-        plt.imshow(image_np_with_annotations)
-
-
-
 def get_tf_labels_from_file(path):
     """
     Gets the labels map as a dict of name:id
@@ -163,7 +128,7 @@ def xml2csv(location, dataset_segment):
                 # Add the upper left coordinate
                 x_min = float(bounding_box.find("xmin").text) / width
                 y_min = float(bounding_box.find("ymin").text) / height
-                temp_csv.extend([x_min, y_min])
+                temp_csv.extend([y_min, x_min])
 
                 # Add the lower left coordinate (not necessary, left blank)
                 # temp_csv.extend(["", ""])
@@ -171,7 +136,7 @@ def xml2csv(location, dataset_segment):
                 # Add the lower right coordinate
                 x_max = float(bounding_box.find("xmax").text) / width
                 y_max = float(bounding_box.find("ymax").text) / height
-                temp_csv.extend([x_max, y_max])
+                temp_csv.extend([y_max, x_max])
 
                 # Add the upper right coordinate (not necessary, left blank)
                 # temp_csv.extend(["", ""])
@@ -366,7 +331,7 @@ def load_dataset(dataset_path, max_images=None, verbose=0):
             plt.subplot(2, 3, idx+1)
 
             # TODO: Need to rework this shit to work for more than 1 detection box per image
-            plot_detections(
+            utils.plot_detections(
                 train_images_np[idx],
                 [train_gt_boxes[idx]],
                 ["duck"],
@@ -399,4 +364,4 @@ if __name__ == "__main__":
     DATASET_PATH = ".\\data\\ducky\\"
 
     # Run a test
-    load_dataset(DATASET_PATH, max_images=1000)
+    load_dataset(DATASET_PATH, max_images=1000, verbose=2)

@@ -11,7 +11,6 @@ Contains all the source code of the components of the VQ-VAE model and Pixel CNN
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-import tensorflow_probability as tfp
 
 
 class CustomVectorQuantizer(keras.layers.Layer):

@@ -18,17 +18,11 @@ if __name__ == "__main__":
     #                                  PARAMETERS                                  #
     # ---------------------------------------------------------------------------- #
     EXAMPLES_TO_SHOW = 10 # number of test detection examples to show
+
     IMAGES_PATH = "data\\alex\\images\\test\\"
     OUTPUT_PATH = "data\\alex\\out\\"
     LABELS_PATH = "data\\alex\\mscoco_label_map.pbtxt"
-    MODEL_PATH = ".\\models\\ssd_mobilenet_v2_2"
-
-    # ---------------------------------------------------------------------------- #
-    #                                   LOAD DATA                                  #
-    # ---------------------------------------------------------------------------- #
-    # Import data loader from dataset.py
-    # (train_data, test_data, label_map) = dataset.load_dataset(max_images=None, verbose=True)
-
+    MODEL_PATH = ".\\models\\ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8\\saved_model"
 
     # ---------------------------------------------------------------------------- #
     #                             IMPORT TRAINED MODEL                             #

@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import glob
 import imageio.v2 as imageio
 import object_detection.utils.config_util as config_util
-import object_detection.builders as builders
+from object_detection.builders import model_builder
 
 
 # class VQVAETrainer(keras.models.Model):
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     #                                HYPERPARAMETERS                               #
     # ---------------------------------------------------------------------------- #
     DATASET_PATH = ".\\data\\ducky\\"
-    MODEL_PATH = ".\\models\\ssd_resnet50_v1_fpn_640x640_coco17_tpu-8\\"
+    MODEL_PATH = ".\\models\\ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8\\"
 
     MAX_TRAINING_EXAMPLES = None
 
@@ -189,44 +189,21 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     # Import data loader from dataset.py
     print("Loading dataset...")
-    (train_dataset, validate_dataset, test_dataset) = dataset.load_dataset(DATASET_PATH, max_images=MAX_TRAINING_EXAMPLES, verbose=1)
+    (train_dataset, validate_dataset, test_dataset) = dataset.load_dataset(DATASET_PATH, max_images=MAX_TRAINING_EXAMPLES, verbose=2)
 
-    # train_images, gt_boxes)
     
     # ---------------------------------------------------------------------------- #
     #                            LOAD PRE-TRAINED MODEL                            #
     # ---------------------------------------------------------------------------- #
     # Import trained and saved model from file
-    # print("Loading model ...")
-    # # model = tf.saved_model.load(".\\models\\ssd_resnet50_v1_fpn_640x640_coco17_tpu-8\\saved_model")
-    # model = tf.saved_model.load(MODEL_PATH + "saved_model\\")
-
-    # print(type(model))
-    # print(model)
-    # # print(type(model.signatures))
-    # print(model.signatures)
-    # print(model.variables)
-    # print(model.graph)
-    # print(model.build())
-
-    # quit()
-
-
-    # ---------------------------------------------------------------------------- #
-    #                      MODIFY MODEL TO FIT DESIRED CLASSES                     #
-    # ---------------------------------------------------------------------------- #
-    # Remove the final classification layer and replace it with a basic randomly 
-    # initialised classifier layer that classifies for our classes
-    # TODO: Implement
-
-    print("Loading model (using new technique) ...")
+    print("Loading model ...")
 
     tf.keras.backend.clear_session()
 
     print('Building model and restoring weights for fine-tuning...', flush=True)
     num_classes = 1
-    pipeline_config = MODEL_PATH + '\\pipeline.config'
-    checkpoint_path = MODEL_PATH + '\\checkpoint\\ckpt-0'
+    pipeline_config = MODEL_PATH + 'pipeline.config'
+    checkpoint_path = MODEL_PATH + 'checkpoint\\ckpt-0'
 
     # Load pipeline config and build a detection model.
     #
@@ -239,8 +216,16 @@ if __name__ == "__main__":
     model_config.ssd.freeze_batchnorm = True
 
     print(model_config)
-    detection_model = builders.model_builder.build(
+    detection_model = model_builder.build(
         model_config=model_config, is_training=True)
+
+
+    # ---------------------------------------------------------------------------- #
+    #                      MODIFY MODEL TO FIT DESIRED CLASSES                     #
+    # ---------------------------------------------------------------------------- #
+    # Remove the final classification layer and replace it with a basic randomly 
+    # initialised classifier layer that classifies for our classes
+    print("Modifying model to fit desired classes ...")
 
     # Set up object-based checkpoint restore --- RetinaNet has two prediction
     # `heads` --- one for classification, the other for box regression.  We will
@@ -264,7 +249,6 @@ if __name__ == "__main__":
     prediction_dict = detection_model.predict(image, shapes)
     _ = detection_model.postprocess(prediction_dict, shapes)
     print('Weights restored!')
-
 
 
     # ---------------------------------------------------------------------------- #

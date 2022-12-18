@@ -21,6 +21,39 @@ import glob as glob
 import dataset as dataset
 
 
+def plot_detections(image_np, boxes, classes, scores, category_index, figsize=(12, 16), image_name=None):
+    """Wrapper function to visualize detections.
+
+    Args:
+        image_np: uint8 numpy array with shape (img_height, img_width, 3)
+        boxes: a numpy array of shape [N, 4]
+        classes: a numpy array of shape [N]. Note that class indices are 1-based,
+        and match the keys in the label map.
+        scores: a numpy array of shape [N] or None.  If scores=None, then
+        this function assumes that the boxes to be plotted are groundtruth
+        boxes and plot all boxes as black with no classes or scores.
+        category_index: a dict containing category dictionaries (each holding
+        category index `id` and category name `name`) keyed by category indices.
+        figsize: size for the figure.
+        image_name: a name for the image file.
+    """
+    image_np_with_annotations = image_np.copy()
+
+    draw_boxes(
+        image_np_with_annotations,
+        boxes,
+        classes,
+        scores,
+        # category_index,
+        # use_normalized_coordinates=True,
+        min_score=0.8)
+
+    if image_name:
+        plt.imsave(image_name, image_np_with_annotations)
+    else:
+        plt.imshow(image_np_with_annotations)
+
+
 def draw_bounding_box_on_image(image, ymin, xmin, ymax, xmax, color, thickness=4, display_str_list=()):
     """
     Adds a single bounding box to an image.
@@ -105,6 +138,7 @@ def draw_boxes(image, boxes, class_names, scores, max_boxes=10, min_score=0.1):
     for i in range(min(len(boxes), max_boxes)):
         if scores[i] >= min_score:
             xmin, ymin, xmax, ymax = tuple(boxes[i])
+            ymin, xmin, ymax, xmax = tuple(boxes[i])
             display_str = "{}: {}%".format(class_names[i], int(100 * scores[i]))
             color = colors[hash(class_names[i]) % len(colors)]
             image_pil = PIL.Image.fromarray(np.uint8(image)).convert("RGB")
@@ -132,6 +166,7 @@ def plot_predictions(image, predictions):
 def run_detector(model, input_folder, output_folder, labels_file, verbose=True):
     """
     TODO: Document me!
+    TODO: Fix the plotting for this function cos i think its real messed up (try copying the implementation of plot_detections)
     
     """
 
@@ -172,13 +207,6 @@ def run_detector(model, input_folder, output_folder, labels_file, verbose=True):
 
         print(i)
         i = i + 1
-
-
-
-
-
-
-
 
 
 def run_detector_live(model, labels_file):
