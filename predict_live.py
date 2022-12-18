@@ -18,8 +18,8 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     #                                  PARAMETERS                                  #
     # ---------------------------------------------------------------------------- #
-    LABELS_PATH = "./data/alex/mscoco_label_map.pbtxt"
-    MODEL_PATH = "./models/ssd_mobilenet_v2_2"
+    LABELS_PATH = ".\\data\\alex\\mscoco_label_map.pbtxt"
+    MODEL_PATH = ".\\models\\ssd_mobilenet_v2_2"
 
     # ---------------------------------------------------------------------------- #
     #                                   LOAD DATA                                  #
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     # Import trained and saved model from file
     print("Loading model ...")
-    # model = tf.saved_model.load("./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model")
+    # model = tf.saved_model.load(".\\models\\ssd_resnet50_v1_fpn_640x640_coco17_tpu-8\\saved_model")
     model = tf.saved_model.load(MODEL_PATH)
 
 
