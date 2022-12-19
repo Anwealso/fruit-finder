@@ -19,6 +19,8 @@ import time
 import tensorflow as tf
 import glob as glob
 import dataset as dataset
+from playsound import playsound
+import winsound as winsound
 
 
 def plot_detections(image_np, boxes, classes, scores, category_index, figsize=(12, 16), image_name=None):
@@ -194,6 +196,8 @@ def run_detector(model, input_folder, output_folder, labels_file, verbose=True):
             max_boxes=10,
             min_score=0.5)
 
+        play_beep()
+
         if verbose == True:
             # Show the output image
             plt.figure(figsize=(20, 15))
@@ -337,3 +341,15 @@ def show_detection_webcam(model, label_map):
     vid.release()
     # Destroy all the windows
     cv2.destroyAllWindows()
+
+
+def play_beep():
+    """
+    Plays a beep sound effect (for when the fruit is successfully scanned)
+    """
+
+    frequency = 2500  # Set Frequency To 2500 Hertz
+    duration = 100  # Set Duration To 1000 ms == 1 second
+    winsound.Beep(frequency, duration)
+
+    playsound('.\\bruh.mp3')
