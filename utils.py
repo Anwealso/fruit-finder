@@ -139,8 +139,8 @@ def draw_boxes(image, boxes, class_names, scores, max_boxes=10, min_score=0.1):
 
     for i in range(min(len(boxes), max_boxes)):
         if scores[i] >= min_score:
-            xmin, ymin, xmax, ymax = tuple(boxes[i])
-            ymin, xmin, ymax, xmax = tuple(boxes[i])
+            xmin, ymin, xmax, ymax = tuple(boxes[i][0])
+            ymin, xmin, ymax, xmax = tuple(boxes[i][0])
             display_str = "{}: {}%".format(class_names[i], int(100 * scores[i]))
             color = colors[hash(class_names[i]) % len(colors)]
             image_pil = PIL.Image.fromarray(np.uint8(image)).convert("RGB")
@@ -195,8 +195,6 @@ def run_detector(model, input_folder, output_folder, labels_file, verbose=True):
             result["detection_scores"][0],
             max_boxes=10,
             min_score=0.5)
-
-        play_beep()
 
         if verbose == True:
             # Show the output image
@@ -352,4 +350,57 @@ def play_beep():
     duration = 100  # Set Duration To 1000 ms == 1 second
     winsound.Beep(frequency, duration)
 
-    playsound('.\\bruh.mp3')
+    # playsound('C:\\Users\\alex\Documents\\dev\\fruit-finder\\bruh.mp3')
+
+
+def get_model_train_step_function(model, optimizer, vars_to_fine_tune):
+    """Get a tf.function for training step."""
+
+    # Use tf.function for a bit of speed.
+    # Comment out the tf.function decorator if you want the inside of the
+    # function to run eagerly.
+    @tf.function
+    def train_step_fn(image_tensors,
+                        groundtruth_boxes_list,
+                        groundtruth_classes_list, 
+                        batch_size):
+        """A single training iteration.
+
+        Args:
+        image_tensors: A list of [1, height, width, 3] Tensor of type tf.float32.
+            Note that the height and width can vary across images, as they are
+            reshaped within this function to be 640x640.
+        groundtruth_boxes_list: A list of Tensors of shape [N_i, 4] with type
+            tf.float32 representing groundtruth boxes for each image in the batch.
+        groundtruth_classes_list: A list of Tensors of shape [N_i, num_classes]
+            with type tf.float32 representing groundtruth boxes for each image in
+            the batch.
+
+        Returns:
+        A scalar tensor representing the total loss for the input batch.
+        """
+        shapes = tf.constant(batch_size * [[640, 640, 3]], dtype=tf.int32)
+        model.provide_groundtruth(
+            groundtruth_boxes_list=groundtruth_boxes_list,
+            groundtruth_classes_list=groundtruth_classes_list)
+        with tf.GradientTape() as tape:
+            preprocessed_images = tf.concat(
+                [model.preprocess(image_tensor)[0]
+                for image_tensor in image_tensors], axis=0)
+            prediction_dict = model.predict(preprocessed_images, shapes)
+
+            print("=================================================================")
+            print(f"model: {model}\n")
+            print(f"preprocessed_images: {preprocessed_images}\n")
+            print(f"shapes: {shapes}\n")
+            print(f"prediction_dict: {prediction_dict}\n")
+
+            losses_dict = model.loss(prediction_dict, shapes)
+            print(f"losses_dict: {losses_dict}\n")            
+            
+            total_loss = losses_dict['Loss/localization_loss'] + losses_dict['Loss/classification_loss']
+            gradients = tape.gradient(total_loss, vars_to_fine_tune)
+            optimizer.apply_gradients(zip(gradients, vars_to_fine_tune))
+        return total_loss
+
+    return train_step_fn

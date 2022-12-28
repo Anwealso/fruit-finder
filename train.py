@@ -166,6 +166,57 @@ import random as random
 #         self.create_gif()
 
 
+def get_model_train_step_function(model, optimizer, vars_to_fine_tune):
+    """Get a tf.function for training step."""
+
+    # Use tf.function for a bit of speed.
+    # Comment out the tf.function decorator if you want the inside of the
+    # function to run eagerly.
+    @tf.function
+    def train_step_fn(image_tensors,
+                        groundtruth_boxes_list,
+                        groundtruth_classes_list):
+        """A single training iteration.
+
+        Args:
+        image_tensors: A list of [1, height, width, 3] Tensor of type tf.float32.
+            Note that the height and width can vary across images, as they are
+            reshaped within this function to be 640x640.
+        groundtruth_boxes_list: A list of Tensors of shape [N_i, 4] with type
+            tf.float32 representing groundtruth boxes for each image in the batch.
+        groundtruth_classes_list: A list of Tensors of shape [N_i, num_classes]
+            with type tf.float32 representing groundtruth boxes for each image in
+            the batch.
+
+        Returns:
+        A scalar tensor representing the total loss for the input batch.
+        """
+        shapes = tf.constant(batch_size * [[640, 640, 3]], dtype=tf.int32)
+        model.provide_groundtruth(
+            groundtruth_boxes_list=groundtruth_boxes_list,
+            groundtruth_classes_list=groundtruth_classes_list)
+        with tf.GradientTape() as tape:
+            preprocessed_images = tf.concat(
+                [detection_model.preprocess(image_tensor)[0]
+                for image_tensor in image_tensors], axis=0)
+            prediction_dict = model.predict(preprocessed_images, shapes)
+
+            # print("=================================================================")
+            # print(f"model: {model}\n")
+            # print(f"preprocessed_images: {preprocessed_images}\n")
+            # print(f"shapes: {shapes}\n")
+            # print(f"prediction_dict: {prediction_dict}\n")
+
+            losses_dict = model.loss(prediction_dict, shapes)
+            # print(f"losses_dict: {losses_dict}\n")            
+
+            total_loss = losses_dict['Loss/localization_loss'] + losses_dict['Loss/classification_loss']
+            gradients = tape.gradient(total_loss, vars_to_fine_tune)
+            optimizer.apply_gradients(zip(gradients, vars_to_fine_tune))
+        return total_loss
+
+    return train_step_fn
+
 
 if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
@@ -189,19 +240,18 @@ if __name__ == "__main__":
     #                                   LOAD DATA                                  #
     # ---------------------------------------------------------------------------- #
     # Import data loader from dataset.py
-    print("Loading dataset...")
+    print("\nLoading dataset...")
     (train_dataset, validate_dataset, test_dataset) = dataset.load_dataset(DATASET_PATH, max_images=MAX_TRAINING_EXAMPLES, verbose=2)
     
     # ---------------------------------------------------------------------------- #
     #                            LOAD PRE-TRAINED MODEL                            #
     # ---------------------------------------------------------------------------- #
     # Import trained and saved model from file
-    print("Loading model ...")
+    print('\nBuilding model and restoring weights for fine-tuning...', flush=True)
 
     tf.keras.backend.clear_session()
 
-    print('Building model and restoring weights for fine-tuning...', flush=True)
-    num_classes = 1
+    num_classes = 1 # TODO: Nodify this to pull tghe desired number of classes from our label_map.pbtxt
     pipeline_config = MODEL_PATH + 'pipeline.config'
     checkpoint_path = MODEL_PATH + 'checkpoint\\ckpt-0'
 
@@ -215,7 +265,7 @@ if __name__ == "__main__":
     model_config.ssd.num_classes = num_classes
     model_config.ssd.freeze_batchnorm = True
 
-    print(model_config)
+    # print(f"Model Configuration:\n{model_config}\n")
     detection_model = model_builder.build(
         model_config=model_config, is_training=True)
 
@@ -225,7 +275,7 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     # Remove the final classification layer and replace it with a basic randomly 
     # initialised classifier layer that classifies for our classes
-    print("Modifying model to fit desired classes ...")
+    print("\nModifying model to fit desired classes ...")
 
     # Set up object-based checkpoint restore --- RetinaNet has two prediction
     # `heads` --- one for classification, the other for box regression.  We will
@@ -256,8 +306,8 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     # Finetune the modified pre-trained model on the smaller dataset containing 
     # examples of our classes
-
-    tf.keras.backend.set_learning_phase(True)
+    
+    print('\nStarting fine-tuning...', flush=True)
 
     # These parameters can be tuned; since our training set has 5 images
     # it doesn't make sense to have a much larger batch size, though we could
@@ -270,43 +320,34 @@ if __name__ == "__main__":
     trainable_variables = detection_model.trainable_variables
     to_fine_tune = []
     prefixes_to_train = [
-        'WeightSharedConvolutionalBoxPredictor/WeightSharedConvolutionalBoxHead',
-        'WeightSharedConvolutionalBoxPredictor/WeightSharedConvolutionalClassHead']
-    
+    'WeightSharedConvolutionalBoxPredictor/WeightSharedConvolutionalBoxHead',
+    'WeightSharedConvolutionalBoxPredictor/WeightSharedConvolutionalClassHead']
     for var in trainable_variables:
         if any([var.name.startswith(prefix) for prefix in prefixes_to_train]):
             to_fine_tune.append(var)
 
     # Set up forward + backward pass for a single train step.
     optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate, momentum=0.9)
-    train_step_fn = utils.get_model_train_step_function(
+    train_step_fn = get_model_train_step_function(
         detection_model, optimizer, to_fine_tune)
 
-    print('Fine-tuning model...', flush=True)
     for idx in range(num_batches):
         # Grab keys for a random subset of examples
         all_keys = list(range(len(train_dataset["images"])))
         random.shuffle(all_keys)
         example_keys = all_keys[:batch_size]
 
+        # TODO: Do data augmentation
         # Note that we do not do data augmentation in this demo.  If you want a
         # a fun exercise, we recommend experimenting with random horizontal flipping
         # and random cropping :)
         gt_boxes_list = [train_dataset["labels"][key] for key in example_keys]
-        print()
-        print(np.shape(gt_boxes_list))
-        print(gt_boxes_list)
-        gt_boxes_list = tf.expand_dims(gt_boxes_list, 1)
+
         gt_classes_list = [train_dataset["gt_classes_one_hot_tensors"][key] for key in example_keys]
         image_tensors = [train_dataset["train_image_tensors"][key] for key in example_keys]
 
-        print()
-        print(np.shape(gt_boxes_list))
-        print(gt_boxes_list)
-        print()
-
         # Training step (forward pass + backwards pass)
-        total_loss = train_step_fn(image_tensors, gt_boxes_list, gt_classes_list, batch_size)
+        total_loss = train_step_fn(image_tensors, gt_boxes_list, gt_classes_list)
 
         if idx % 10 == 0:
             print('batch ' + str(idx) + ' of ' + str(num_batches)

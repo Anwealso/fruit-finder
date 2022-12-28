@@ -90,7 +90,7 @@ conda install -c anaconda lxml;
 pyrcc5 -o libs/resources.py resources.qrc;
 ```
 
-From inside labelImg folder:
+Then, from inside labelImg folder:
 
 ```
 python -m pip install .
