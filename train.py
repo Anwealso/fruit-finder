@@ -224,6 +224,24 @@ def get_model_train_step_function(model, optimizer, vars_to_fine_tune):
 
     return train_step_fn
 
+@tf.function # uncomment this decorator if you want to run inference eagerly
+def detect(detection_model, input_tensor):
+    """Run detection on an input image.
+
+    Args:
+        input_tensor: A [1, height, width, 3] Tensor of type tf.float32.
+        Note that height and width can be anything since the image will be
+        immediately resized according to the needs of the model within this
+        function.
+
+    Returns:
+        A dict containing 3 Tensors (`detection_boxes`, `detection_classes`,
+        and `detection_scores`).
+    """
+    preprocessed_image, shapes = detection_model.preprocess(input_tensor)
+    prediction_dict = detection_model.predict(preprocessed_image, shapes)
+    return detection_model.postprocess(prediction_dict, shapes)
+
 
 if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
@@ -231,7 +249,7 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     DATASET_PATH = ".\\data\\totoro\\"
     MODEL_PATH = ".\\models\\ssd_mobilenet_v2_fpnlite_640x640_totoro\\"
-    OUTPUT_DIRECTORY = ".\\exported-models\\my_model" # the dir into which the trained model will be saved
+    OUTPUT_DIRECTORY = ".\\exported-models\\my_model_pre" # the dir into which the trained model will be saved
 
     MAX_TRAINING_EXAMPLES = None
 
@@ -260,7 +278,8 @@ if __name__ == "__main__":
     tf.keras.backend.clear_session()
 
     num_classes = 1 # TODO: Nodify this to pull tghe desired number of classes from our label_map.pbtxt
-    pipeline_config = MODEL_PATH + 'pipeline.config'
+    config_path = MODEL_PATH + 'pipeline.config'
+    checkpoint_dir = MODEL_PATH + 'checkpoint\\'
     checkpoint_path = MODEL_PATH + 'checkpoint\\ckpt-0'
 
     # Load pipeline config and build a detection model.
@@ -268,14 +287,27 @@ if __name__ == "__main__":
     # Since we are working off of a COCO architecture which predicts 90
     # class slots by default, we override the `num_classes` field here to be just
     # one (for our new rubber ducky class).
-    configs = config_util.get_configs_from_pipeline_file(pipeline_config)
-    model_config = configs['model']
-    model_config.ssd.num_classes = num_classes
-    model_config.ssd.freeze_batchnorm = True
+    configs = config_util.get_configs_from_pipeline_file(config_path)
+    configs['model'].ssd.num_classes = num_classes
+    configs['model'].ssd.freeze_batchnorm = True
+    configs['train_config'].batch_size = 4
+    configs['train_config'].fine_tune_checkpoint = checkpoint_path # Path to checkpoint of pre-trained model
+    configs['train_config'].fine_tune_checkpoint_type = "detection" # Set this to "detection" since we want to be training the full detection model
+    configs['train_config'].use_bfloat16 = False # Set this to false if you are not training on a TPU
+    configs['train_input_config'].label_map_path = DATASET_PATH + "label_map.pbtxt" # Path to label map file
+    # configs['train_input_config'].tf_record_input_reader.input_path = "annotations/train.record" # Path to training TFRecord file
+    configs['train_config'].use_bfloat16 = False # Set this to false if you are not training on a TPU
+    # configs['eval_config'].metrics_set = "coco_detection_metrics"
+    # configs['eval_config'].use_moving_averages = False
+    configs['eval_input_config'].label_map_path = DATASET_PATH + "label_map.pbtxt" # Path to label map file
+    # configs['eval_input_config'].tf_record_input_reader .input_path = "annotations/test.record" # Path to testing TFRecord
 
-    # print(f"Model Configuration:\n{model_config}\n")
+    pipeline_proto = config_util.create_pipeline_proto_from_configs(configs)
+    config_util.save_pipeline_config(pipeline_proto, MODEL_PATH)
+
+    print(f"Model+Training Configurations:\n{configs}\n")
     detection_model = model_builder.build(
-        model_config=model_config, is_training=True)
+        model_config=configs['model'], is_training=True)
 
 
     # ---------------------------------------------------------------------------- #
@@ -305,9 +337,10 @@ if __name__ == "__main__":
     # Run model through a dummy image so that variables are created
     image, shapes = detection_model.preprocess(tf.zeros([1, 640, 640, 3]))
     prediction_dict = detection_model.predict(image, shapes)
-    _ = detection_model.postprocess(prediction_dict, shapes)
+    detection_model.postprocess(prediction_dict, shapes)
     print('Weights restored!')
 
+    print(f"Model+Training Configurations 2.0:\n{configs}\n")
 
     # ---------------------------------------------------------------------------- #
     #                                 RUN TRAINING                                 #
@@ -359,8 +392,14 @@ if __name__ == "__main__":
         total_loss = train_step_fn(image_tensors, gt_boxes_list, gt_classes_list)
 
         if idx % 10 == 0:
+            # Print out smoe training metrics
             print('batch ' + str(idx) + ' of ' + str(num_batches)
             + ', loss=' +  str(total_loss.numpy()), flush=True)
+            # Save training checkpoint
+            ckpt = tf.train.Checkpoint(model=detection_model)
+            exported_checkpoint_manager = tf.train.CheckpointManager(
+                ckpt, checkpoint_dir, max_to_keep=3)
+            exported_checkpoint_manager.save(checkpoint_number=idx//10)
 
     print('Done fine-tuning!')
 
@@ -371,18 +410,21 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     #                           EXPORT THE TRAINED MODEL                           #
     # ---------------------------------------------------------------------------- #
-    # print('Exporting model...')
+    print('Exporting model...')
 
-    # pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
-    # with tf.io.gfile.GFile(MODEL_PATH + "pipeline.config", 'r') as f:
-    #     text_format.Merge(f.read(), pipeline_config)
-    # text_format.Merge("", pipeline_config)
+    pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
+    with tf.io.gfile.GFile(MODEL_PATH + "pipeline.config", 'r') as f:
+        text_format.Merge(f.read(), pipeline_config)
+    text_format.Merge("", pipeline_config)
 
-    # exporter_lib_v2.export_inference_graph(
-    #     "image_tensor", 
-    #     pipeline_config, 
-    #     MODEL_PATH + "checkpoint",
-    #     OUTPUT_DIRECTORY)
+    exporter_lib_v2.export_inference_graph(
+        "image_tensor", 
+        pipeline_config, 
+        MODEL_PATH + "checkpoint",
+        OUTPUT_DIRECTORY)
+
+    # model.save('path/to/location')
+
 
     # ---------------------------------------------------------------------------- #
     #                                 FINAL RESULTS                                #
@@ -405,32 +447,12 @@ if __name__ == "__main__":
         test_images_np.append(np.expand_dims(
             utils.load_image_into_numpy_array(image_path), axis=0))
 
-    # Again, uncomment this decorator if you want to run inference eagerly
-    @tf.function
-    def detect(input_tensor):
-        """Run detection on an input image.
-
-        Args:
-            input_tensor: A [1, height, width, 3] Tensor of type tf.float32.
-            Note that height and width can be anything since the image will be
-            immediately resized according to the needs of the model within this
-            function.
-
-        Returns:
-            A dict containing 3 Tensors (`detection_boxes`, `detection_classes`,
-            and `detection_scores`).
-        """
-        preprocessed_image, shapes = detection_model.preprocess(input_tensor)
-        prediction_dict = detection_model.predict(preprocessed_image, shapes)
-        return detection_model.postprocess(prediction_dict, shapes)
-
     # Note that the first frame will trigger tracing of the tf.function, which will
     # take some time, after which inference should be fast.
-
     label_id_offset = 1
     for i in range(len(test_images_np)):
         input_tensor = tf.convert_to_tensor(test_images_np[i], dtype=tf.float32)
-        detections = detect(input_tensor)
+        detections = detect(detection_model, input_tensor)
 
         out_filename = test_images_list[i].replace("images\\", "out\\")
 
@@ -441,20 +463,3 @@ if __name__ == "__main__":
             detections['detection_classes'][0].numpy().astype(np.uint32) + label_id_offset,
             detections['detection_scores'][0].numpy(),
             figsize=(15, 20), image_name=out_filename, min_score=0.2)
-
-
-    # imageio.plugins.freeimage.download()
-
-    # anim_file = 'duckies_test.gif'
-
-    # filenames = glob.glob('gif_frame_*.jpg')
-    # filenames = sorted(filenames)
-    # last = -1
-    # images = []
-    # for filename in filenames:
-    # image = imageio.imread(filename)
-    # images.append(image)
-
-    # imageio.mimsave(anim_file, images, 'GIF-FI', fps=5)
-
-    # display(IPyImage(open(anim_file, 'rb').read()))

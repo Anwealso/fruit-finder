@@ -50,6 +50,7 @@ def plot_detections(image_np, boxes, classes, scores, figsize=(12, 16), image_na
 
     if image_name:
         plt.imsave(image_name, image_np_with_annotations)
+        plt.imshow(image_np_with_annotations)
     else:
         plt.imshow(image_np_with_annotations)
 
@@ -133,12 +134,12 @@ def draw_boxes(image, boxes, class_names, scores, max_boxes=10, min_score=0.1):
             overlayed_image (ndarray): The image with the prediction results overlayed
     """
 
-    print(f"image (type={type(image)}),  (shape={np.shape(boxes)}): NOT SHOWN FOR CONCISENESS")
+    # print(f"image (type={type(image)}),  (shape={np.shape(boxes)}): NOT SHOWN FOR CONCISENESS")
     
     colors = list(PIL.ImageColor.colormap.values())
 
     for i in range(min(len(boxes), max_boxes)):
-        print(f"(box={boxes[i][0]}), score={scores[i]}), class_name={class_names[i]})")
+        # print(f"(box={boxes[i][0]}), score={scores[i]}), class_name={class_names[i]})")
 
         if scores[i] >= min_score:
             # xmin, ymin, xmax, ymax = tuple(boxes[i][0])
