@@ -20,6 +20,7 @@ import glob
 import imageio.v2 as imageio
 import object_detection.utils.config_util as config_util
 from object_detection.builders import model_builder
+import random as random
 
 
 # class VQVAETrainer(keras.models.Model):
@@ -170,12 +171,12 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     #                                HYPERPARAMETERS                               #
     # ---------------------------------------------------------------------------- #
-    DATASET_PATH = ".\\data\\ducky\\"
-    MODEL_PATH = ".\\models\\ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8\\"
+    DATASET_PATH = ".\\data\\totoro\\"
+    MODEL_PATH = ".\\models\\ssd_mobilenet_v2_fpnlite_640x640_totoro\\"
 
     MAX_TRAINING_EXAMPLES = None
 
-    TRAINING_EPOCHS = 20
+    TRAINING_EPOCHS = 5
     BATCH_SIZE = 128
 
     NUM_LATENT_DIMS = 16
@@ -190,7 +191,6 @@ if __name__ == "__main__":
     # Import data loader from dataset.py
     print("Loading dataset...")
     (train_dataset, validate_dataset, test_dataset) = dataset.load_dataset(DATASET_PATH, max_images=MAX_TRAINING_EXAMPLES, verbose=2)
-
     
     # ---------------------------------------------------------------------------- #
     #                            LOAD PRE-TRAINED MODEL                            #
@@ -256,16 +256,64 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     # Finetune the modified pre-trained model on the smaller dataset containing 
     # examples of our classes
-    # TODO: Implement
 
+    tf.keras.backend.set_learning_phase(True)
 
-    # Create the model (wrapped in the training class to handle performance metrics logging)
-    # vqvae_trainer = VQVAETrainer(data_variance, latent_dim=NUM_LATENT_DIMS, num_embeddings=NUM_EMBEDDINGS)
-    # vqvae_trainer.compile(optimizer=keras.optimizers.Adam())
-    # vqvae_trainer.vqvae.summary()
+    # These parameters can be tuned; since our training set has 5 images
+    # it doesn't make sense to have a much larger batch size, though we could
+    # fit more examples in memory if we wanted to.
+    batch_size = 4
+    learning_rate = 0.01
+    num_batches = 100
 
+    # Select variables in top layers to fine-tune.
+    trainable_variables = detection_model.trainable_variables
+    to_fine_tune = []
+    prefixes_to_train = [
+        'WeightSharedConvolutionalBoxPredictor/WeightSharedConvolutionalBoxHead',
+        'WeightSharedConvolutionalBoxPredictor/WeightSharedConvolutionalClassHead']
+    
+    for var in trainable_variables:
+        if any([var.name.startswith(prefix) for prefix in prefixes_to_train]):
+            to_fine_tune.append(var)
 
-    print("Training model...")
+    # Set up forward + backward pass for a single train step.
+    optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate, momentum=0.9)
+    train_step_fn = utils.get_model_train_step_function(
+        detection_model, optimizer, to_fine_tune)
+
+    print('Fine-tuning model...', flush=True)
+    for idx in range(num_batches):
+        # Grab keys for a random subset of examples
+        all_keys = list(range(len(train_dataset["images"])))
+        random.shuffle(all_keys)
+        example_keys = all_keys[:batch_size]
+
+        # Note that we do not do data augmentation in this demo.  If you want a
+        # a fun exercise, we recommend experimenting with random horizontal flipping
+        # and random cropping :)
+        gt_boxes_list = [train_dataset["labels"][key] for key in example_keys]
+        print()
+        print(np.shape(gt_boxes_list))
+        print(gt_boxes_list)
+        gt_boxes_list = tf.expand_dims(gt_boxes_list, 1)
+        gt_classes_list = [train_dataset["gt_classes_one_hot_tensors"][key] for key in example_keys]
+        image_tensors = [train_dataset["train_image_tensors"][key] for key in example_keys]
+
+        print()
+        print(np.shape(gt_boxes_list))
+        print(gt_boxes_list)
+        print()
+
+        # Training step (forward pass + backwards pass)
+        total_loss = train_step_fn(image_tensors, gt_boxes_list, gt_classes_list, batch_size)
+
+        if idx % 10 == 0:
+            print('batch ' + str(idx) + ' of ' + str(num_batches)
+            + ', loss=' +  str(total_loss.numpy()), flush=True)
+
+    print('Done fine-tuning!')
+
     # Run training, plotting losses and metrics throughout
     # history = vqvae_trainer.fit(train_data, epochs=TRAINING_EPOCHS, batch_size=BATCH_SIZE, callbacks=[ProgressImagesCallback(train_data, validate_data)])
 
