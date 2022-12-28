@@ -30,12 +30,15 @@ An AI fruit scanner for supermarket checkouts
 - Write model builder (/ loading from file) code (model.py)
 - Writing training loop
 
-- Fix these export bugs where it says the model is not compiled properly (maybe we need to run 1 round of dummy inference first to init?) e.g.: `WARNING:tensorflow:Skipping full serialization of Keras layer <keras.layers.core.lambda_layer.Lambda object at 0x000001CF085B4FD0>, because it is not built.`
-
 - Check that datatypes / detection box formatas are correct on the predivcted images benig plotted
 - Add checkpoint saving for resuming from interrupted training
 - Add tensorboard stats tracking
 - Test running inference on pc with static images (using predict.py)
+
+BUGFIX:
+
+- Fix these export bugs where it says the model is not compiled properly (maybe we need to run 1 round of dummy inference first to init?) e.g.: `WARNING:tensorflow:Skipping full serialization of Keras layer <keras.layers.core.lambda_layer.Lambda object at 0x000001CF085B4FD0>, because it is not built.`
+- Need to write out model_config back out into file pipeline.config
 
 ## Usage Guide
 

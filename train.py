@@ -249,7 +249,7 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     DATASET_PATH = ".\\data\\totoro\\"
     MODEL_PATH = ".\\models\\ssd_mobilenet_v2_fpnlite_640x640_totoro\\"
-    OUTPUT_DIRECTORY = ".\\exported-models\\my_model_pre" # the dir into which the trained model will be saved
+    OUTPUT_DIRECTORY = ".\\exported-models\\my_model" # the dir into which the trained model will be saved
 
     MAX_TRAINING_EXAMPLES = None
 
@@ -277,10 +277,11 @@ if __name__ == "__main__":
 
     tf.keras.backend.clear_session()
 
-    num_classes = 1 # TODO: Nodify this to pull tghe desired number of classes from our label_map.pbtxt
+    num_classes = 1 # TODO: Nodify this to pull the desired number of classes from our label_map.pbtxt
     config_path = MODEL_PATH + 'pipeline.config'
     checkpoint_dir = MODEL_PATH + 'checkpoint\\'
     checkpoint_path = MODEL_PATH + 'checkpoint\\ckpt-0'
+    
 
     # Load pipeline config and build a detection model.
     #
@@ -398,8 +399,8 @@ if __name__ == "__main__":
             # Save training checkpoint
             ckpt = tf.train.Checkpoint(model=detection_model)
             exported_checkpoint_manager = tf.train.CheckpointManager(
-                ckpt, checkpoint_dir, max_to_keep=3)
-            exported_checkpoint_manager.save(checkpoint_number=idx//10)
+                ckpt, checkpoint_dir, max_to_keep=20)
+            exported_checkpoint_manager.save(checkpoint_number=(idx//10)+1)
 
     print('Done fine-tuning!')
 
@@ -412,14 +413,14 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     print('Exporting model...')
 
-    pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
-    with tf.io.gfile.GFile(MODEL_PATH + "pipeline.config", 'r') as f:
-        text_format.Merge(f.read(), pipeline_config)
-    text_format.Merge("", pipeline_config)
+    # pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
+    # with tf.io.gfile.GFile(MODEL_PATH + "pipeline.config", 'r') as f:
+    #     text_format.Merge(f.read(), pipeline_config)
+    # text_format.Merge("", pipeline_config)
 
     exporter_lib_v2.export_inference_graph(
         "image_tensor", 
-        pipeline_config, 
+        pipeline_proto, 
         MODEL_PATH + "checkpoint",
         OUTPUT_DIRECTORY)
 
@@ -439,6 +440,13 @@ if __name__ == "__main__":
 
     # -------------------------- Setup the test dataset -------------------------- #
     # TODO: Rework this to pull the test images straight out of the loaded dataset
+
+    # utils.run_detector(detection_model, 
+    #                     DATASET_PATH+'images\\test\\', 
+    #                     DATASET_PATH+'out\\test\\', 
+    #                     DATASET_PATH+'label_map.pbtxt', 
+    #                     min_score=0.2)
+    
     test_image_dir = DATASET_PATH + 'images\\test\\'
     test_images_list = glob.glob(os.path.join(test_image_dir, "*"))
     test_images_np = []

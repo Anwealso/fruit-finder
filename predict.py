@@ -40,4 +40,4 @@ if __name__ == "__main__":
     # utils.show_detection_examples(trained_model, test_data, EXAMPLES_TO_SHOW)
 
     print("Running inference on static images ...")
-    utils.run_detector(model, IMAGES_PATH, OUTPUT_PATH, LABELS_PATH)
+    utils.run_detector(model, IMAGES_PATH, OUTPUT_PATH, LABELS_PATH, min_score=0.2)

@@ -168,7 +168,7 @@ def plot_predictions(image, predictions):
     # TODO: Implement ...
 
 
-def run_detector(model, input_folder, output_folder, labels_file, verbose=True):
+def run_detector(model, input_folder, output_folder, labels_file, min_score=0.5, verbose=True):
     """
     TODO: Document me!
     TODO: Fix the plotting for this function cos i think its real messed up (try copying the implementation of plot_detections)
@@ -193,11 +193,11 @@ def run_detector(model, input_folder, output_folder, labels_file, verbose=True):
 
         image_with_boxes = draw_boxes(
             np.squeeze(img), 
-            result["detection_boxes"][0],
+            result["detection_boxes"],
             class_names,
             result["detection_scores"][0],
             max_boxes=10,
-            min_score=0.5)
+            min_score=min_score)
 
         if verbose == True:
             # Show the output image
