@@ -19,10 +19,11 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     EXAMPLES_TO_SHOW = 10 # number of test detection examples to show
 
-    IMAGES_PATH = "data\\alex\\images\\test\\"
-    OUTPUT_PATH = "data\\alex\\out\\"
-    LABELS_PATH = "data\\alex\\mscoco_label_map.pbtxt"
-    MODEL_PATH = ".\\models\\ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8\\saved_model"
+    DATASET_PATH = "data\\totoro\\"
+    IMAGES_PATH = DATASET_PATH + "images\\test\\"
+    OUTPUT_PATH = DATASET_PATH + "out\\"
+    LABELS_PATH = DATASET_PATH + "label_map.pbtxt"
+    MODEL_PATH = ".\\exported-models\\my_model\\saved_model"
 
     # ---------------------------------------------------------------------------- #
     #                             IMPORT TRAINED MODEL                             #

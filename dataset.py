@@ -370,8 +370,7 @@ def load_dataset(dataset_path, max_images=None, verbose=0):
                 train_images_np[idx],
                 [train_gt_boxes[idx]],
                 ["totoro"],
-                dummy_scores, 
-                category_index)
+                dummy_scores)
 
         plt.show()
 

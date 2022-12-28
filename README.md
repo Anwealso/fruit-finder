@@ -30,6 +30,13 @@ An AI fruit scanner for supermarket checkouts
 - Write model builder (/ loading from file) code (model.py)
 - Writing training loop
 
+- Fix these export bugs where it says the model is not compiled properly (maybe we need to run 1 round of dummy inference first to init?) e.g.: `WARNING:tensorflow:Skipping full serialization of Keras layer <keras.layers.core.lambda_layer.Lambda object at 0x000001CF085B4FD0>, because it is not built.`
+
+- Check that datatypes / detection box formatas are correct on the predivcted images benig plotted
+- Add checkpoint saving for resuming from interrupted training
+- Add tensorboard stats tracking
+- Test running inference on pc with static images (using predict.py)
+
 ## Usage Guide
 
 ### Installation
@@ -110,6 +117,22 @@ python labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 - https://github.com/tensorflow/models/issues/10499
 - https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/
 - https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md
+
+Model Exporting Methods
+
+Method 1: Use the command line export script
+Use `python .\exporter_main_v2.py --input_type image_tensor --pipeline_config_path .\models\ssd_mobilenet_v2_fpnlite_640x640_totoro\pipeline.config --trained_checkpoint_dir .\models\ssd_mobilenet_v2_fpnlite_640x640_totoro\checkpoint --output_directory .\exported-models\my_model`
+
+- https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html?highlight=save#configure-the-training-pipeline
+- https://medium.com/mlearning-ai/tensoflow-object-detection-api-with-tf1-vs-tf2-9d716be1f5d9
+
+Method 2: Custom export just the frozen graph .pb
+
+- https://leimao.github.io/blog/Save-Load-Inference-From-TF2-Frozen-Graph/
+
+Method 3: Hack engineer a solution using exporter.py
+
+- https://leimao.github.io/blog/Save-Load-Inference-From-TF2-Frozen-Graph/
 
 ---
 

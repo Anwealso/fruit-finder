@@ -17,9 +17,16 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import glob
+import os
 import imageio.v2 as imageio
 import object_detection.utils.config_util as config_util
 from object_detection.builders import model_builder
+
+# from object_detection.exporter import export_inference_graph
+from object_detection import exporter_lib_v2
+from object_detection.protos import pipeline_pb2
+from google.protobuf import text_format
+
 import random as random
 
 
@@ -224,6 +231,7 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     DATASET_PATH = ".\\data\\totoro\\"
     MODEL_PATH = ".\\models\\ssd_mobilenet_v2_fpnlite_640x640_totoro\\"
+    OUTPUT_DIRECTORY = ".\\exported-models\\my_model" # the dir into which the trained model will be saved
 
     MAX_TRAINING_EXAMPLES = None
 
@@ -315,6 +323,7 @@ if __name__ == "__main__":
     batch_size = 4
     learning_rate = 0.01
     num_batches = 100
+    # num_batches = 10
 
     # Select variables in top layers to fine-tune.
     trainable_variables = detection_model.trainable_variables
@@ -355,27 +364,97 @@ if __name__ == "__main__":
 
     print('Done fine-tuning!')
 
+    # TODO: Add tensorboard plotting throughout training so I can see the loss and convergence characteristics
     # Run training, plotting losses and metrics throughout
     # history = vqvae_trainer.fit(train_data, epochs=TRAINING_EPOCHS, batch_size=BATCH_SIZE, callbacks=[ProgressImagesCallback(train_data, validate_data)])
 
-    quit()
-
     # ---------------------------------------------------------------------------- #
-    #                                SAVE THE MODEL                                #
+    #                           EXPORT THE TRAINED MODEL                           #
     # ---------------------------------------------------------------------------- #
-    # Get the trained model
-    trained_vqvae_model = vqvae_trainer.vqvae
+    # print('Exporting model...')
 
-    # Save the model to file as a tensorflow SavedModel
-    trained_vqvae_model.save(".\\vqvae_saved_model")
+    # pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
+    # with tf.io.gfile.GFile(MODEL_PATH + "pipeline.config", 'r') as f:
+    #     text_format.Merge(f.read(), pipeline_config)
+    # text_format.Merge("", pipeline_config)
 
+    # exporter_lib_v2.export_inference_graph(
+    #     "image_tensor", 
+    #     pipeline_config, 
+    #     MODEL_PATH + "checkpoint",
+    #     OUTPUT_DIRECTORY)
 
     # ---------------------------------------------------------------------------- #
     #                                 FINAL RESULTS                                #
     # ---------------------------------------------------------------------------- #
     # Visualise the model training curves
-    utils.plot_training_metrics(history)
-    utils.plot_ssim_history(vqvae_trainer.ssim_history)
+    # utils.plot_training_metrics(history)
+    # utils.plot_ssim_history(vqvae_trainer.ssim_history)
     
     # Visualise output generations from the finished model
     # utils.show_reconstruction_examples(trained_vqvae_model, validate_data, EXAMPLES_TO_SHOW)
+
+
+    # -------------------------- Setup the test dataset -------------------------- #
+    # TODO: Rework this to pull the test images straight out of the loaded dataset
+    test_image_dir = DATASET_PATH + 'images\\test\\'
+    test_images_list = glob.glob(os.path.join(test_image_dir, "*"))
+    test_images_np = []
+    for image_path in test_images_list:
+        # image_path = os.path.join(test_image_dir, 'test' + str(i) + '.jpg')
+        test_images_np.append(np.expand_dims(
+            utils.load_image_into_numpy_array(image_path), axis=0))
+
+    # Again, uncomment this decorator if you want to run inference eagerly
+    @tf.function
+    def detect(input_tensor):
+        """Run detection on an input image.
+
+        Args:
+            input_tensor: A [1, height, width, 3] Tensor of type tf.float32.
+            Note that height and width can be anything since the image will be
+            immediately resized according to the needs of the model within this
+            function.
+
+        Returns:
+            A dict containing 3 Tensors (`detection_boxes`, `detection_classes`,
+            and `detection_scores`).
+        """
+        preprocessed_image, shapes = detection_model.preprocess(input_tensor)
+        prediction_dict = detection_model.predict(preprocessed_image, shapes)
+        return detection_model.postprocess(prediction_dict, shapes)
+
+    # Note that the first frame will trigger tracing of the tf.function, which will
+    # take some time, after which inference should be fast.
+
+    label_id_offset = 1
+    for i in range(len(test_images_np)):
+        input_tensor = tf.convert_to_tensor(test_images_np[i], dtype=tf.float32)
+        detections = detect(input_tensor)
+
+        out_filename = test_images_list[i].replace("images\\", "out\\")
+
+        print(out_filename)
+        utils.plot_detections(
+            test_images_np[i][0],
+            detections['detection_boxes'].numpy(),
+            detections['detection_classes'][0].numpy().astype(np.uint32) + label_id_offset,
+            detections['detection_scores'][0].numpy(),
+            figsize=(15, 20), image_name=out_filename, min_score=0.2)
+
+
+    # imageio.plugins.freeimage.download()
+
+    # anim_file = 'duckies_test.gif'
+
+    # filenames = glob.glob('gif_frame_*.jpg')
+    # filenames = sorted(filenames)
+    # last = -1
+    # images = []
+    # for filename in filenames:
+    # image = imageio.imread(filename)
+    # images.append(image)
+
+    # imageio.mimsave(anim_file, images, 'GIF-FI', fps=5)
+
+    # display(IPyImage(open(anim_file, 'rb').read()))

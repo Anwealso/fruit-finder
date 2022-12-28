@@ -23,7 +23,7 @@ from playsound import playsound
 import winsound as winsound
 
 
-def plot_detections(image_np, boxes, classes, scores, category_index, figsize=(12, 16), image_name=None):
+def plot_detections(image_np, boxes, classes, scores, figsize=(12, 16), image_name=None, min_score=0.5):
     """Wrapper function to visualize detections.
 
     Args:
@@ -46,9 +46,7 @@ def plot_detections(image_np, boxes, classes, scores, category_index, figsize=(1
         boxes,
         classes,
         scores,
-        # category_index,
-        # use_normalized_coordinates=True,
-        min_score=0.8)
+        min_score=min_score)
 
     if image_name:
         plt.imsave(image_name, image_np_with_annotations)
@@ -135,11 +133,15 @@ def draw_boxes(image, boxes, class_names, scores, max_boxes=10, min_score=0.1):
             overlayed_image (ndarray): The image with the prediction results overlayed
     """
 
+    print(f"image (type={type(image)}),  (shape={np.shape(boxes)}): NOT SHOWN FOR CONCISENESS")
+    
     colors = list(PIL.ImageColor.colormap.values())
 
     for i in range(min(len(boxes), max_boxes)):
+        print(f"(box={boxes[i][0]}), score={scores[i]}), class_name={class_names[i]})")
+
         if scores[i] >= min_score:
-            xmin, ymin, xmax, ymax = tuple(boxes[i][0])
+            # xmin, ymin, xmax, ymax = tuple(boxes[i][0])
             ymin, xmin, ymax, xmax = tuple(boxes[i][0])
             display_str = "{}: {}%".format(class_names[i], int(100 * scores[i]))
             color = colors[hash(class_names[i]) % len(colors)]
@@ -351,6 +353,30 @@ def play_beep():
     winsound.Beep(frequency, duration)
 
     # playsound('C:\\Users\\alex\Documents\\dev\\fruit-finder\\bruh.mp3')
+
+
+def load_image_into_numpy_array(path):
+    """Load an image from file into a numpy array.
+
+    Puts image into numpy array to feed into tensorflow graph.
+    Note that by convention we put it into a numpy array with shape
+    (height, width, channels), where channels=3 for RGB.
+
+    Args:
+    path: a file path.
+
+    Returns:
+    uint8 numpy array with shape (img_height, img_width, 3)
+    """
+
+    # Open the image
+    img = PIL.Image.open(path)
+    # Convert image to numpy array
+    data = np.asarray(img)
+    # Close the image (not strictly necessary)
+    del img
+
+    return data
 
 
 def get_model_train_step_function(model, optimizer, vars_to_fine_tune):
