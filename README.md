@@ -26,7 +26,7 @@ An AI fruit scanner for supermarket checkouts
 
 ### TODO:
 
-- Build scanning GUI
+- Build scanning GUI (decided on web gui + server-side image processing (w/ locally hosted server))
 - Add tensorboard stats tracking
 - Update the detection plotting pipeline to allow for mulitple detection boxes per image
 
