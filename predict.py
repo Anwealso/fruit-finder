@@ -19,18 +19,19 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     EXAMPLES_TO_SHOW = 10 # number of test detection examples to show
 
-    DATASET_PATH = "data\\totoro\\"
-    IMAGES_PATH = DATASET_PATH + "images\\test\\"
-    OUTPUT_PATH = DATASET_PATH + "out\\"
+    DATASET_PATH = "data/totoro/"
+    IMAGES_PATH = DATASET_PATH + "images/test/"
+    OUTPUT_PATH = DATASET_PATH + "out/test/"
     LABELS_PATH = DATASET_PATH + "label_map.pbtxt"
-    MODEL_PATH = ".\\exported-models\\my_model\\saved_model"
+    # MODEL_PATH = "./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model"
+    MODEL_PATH = "./exported-models/my_model/saved_model"
 
     # ---------------------------------------------------------------------------- #
     #                             IMPORT TRAINED MODEL                             #
     # ---------------------------------------------------------------------------- #
     # Import trained and saved model from file
     print("Loading model ...")
-    # model = tf.saved_model.load(".\\models\\ssd_resnet50_v1_fpn_640x640_coco17_tpu-8\\saved_model")
+    # model = tf.saved_model.load("./models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model")
     model = tf.saved_model.load(MODEL_PATH)
 
     # ---------------------------------------------------------------------------- #
