@@ -19,8 +19,9 @@ import time
 import tensorflow as tf
 import glob as glob
 import dataset as dataset
-from playsound import playsound
-import winsound as winsound
+import platform as platform
+# from playsound import playsound
+# import winsound as winsound
 
 
 def plot_detections(image_np, boxes, classes, scores, figsize=(12, 16), image_name=None, min_score=0.5):
@@ -175,6 +176,8 @@ def run_detector(model, input_folder, output_folder, labels_file, min_score=0.5,
     
     """
 
+    # TODO: Implement ability to plot multiple boxes on an image
+
     i = 0
     for path in glob.glob(input_folder + '*.*'): # get any file in that folder
         # Reads in image
@@ -206,7 +209,10 @@ def run_detector(model, input_folder, output_folder, labels_file, min_score=0.5,
             plt.imshow(image_with_boxes)
 
         # Save the output image
-        output_path = output_folder + "out_" + "\\".join(path.split("\\")[-1:])
+        if platform.system() == 'Windows':
+            output_path = output_folder + "out_" + "\\".join(path.split("\\")[-1:])
+        else:
+            output_path = output_folder + "out_" + "/".join(path.split("/")[-1:])
         plt.savefig(output_path)
         plt.close()
 
