@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     DATASET_PATH = "data\\totoro\\"
     IMAGES_PATH = DATASET_PATH + "images\\test\\"
-    OUTPUT_PATH = DATASET_PATH + "out\\"
+    OUTPUT_PATH = DATASET_PATH + "out\\test\\"
     LABELS_PATH = DATASET_PATH + "label_map.pbtxt"
     MODEL_PATH = ".\\exported-models\\my_model\\saved_model"
 
