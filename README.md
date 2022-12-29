@@ -15,30 +15,23 @@ An AI fruit scanner for supermarket checkouts
 
 ### Development Roadmap
 
-- Get fruit images
+- Collect and annotate fruit images dataset
 - **[DONE]** Label with label.py & store imgs & labels together on file
 - **[DONE]** Load training dataset from file w/ dataset.py load_data()
 - **[DONE]** Load test dataset from file w/ dataset.py load_data()
-- Finetute a fast & light object detection algorithm pretrained on ImageNet (Fast RCNN, YOLO, etc.) and save to file w/ train. py
-- **[DONE] Load model & run live inference on webcam w/ predict. py**
-- After validating performance on laptop webcam, compress and convert to tflite to be run on a raspberry pi + webcam
+- **[DONE]** Finetute a fast & light object detection algorithm pretrained on ImageNet (Fast RCNN, YOLO, etc.) and save to file w/ train. py
+- **[DONE]** Load model & run live inference on webcam w/ predict.py
 - Build GUI user interface with sounds and mount raspberry pi for a realistic scanning demo
+- After validating performance on laptop webcam, compress and convert to tflite to be run on a raspberry pi + webcam
 
 ### TODO:
 
-- Update the data loading pipeline to allow for mulitple detection boxes per training image
-- Write model builder (/ loading from file) code (model.py)
-- Writing training loop
-
-- Check that datatypes / detection box formatas are correct on the predivcted images benig plotted
-- Add checkpoint saving for resuming from interrupted training
+- Build scanning GUI
 - Add tensorboard stats tracking
-- Test running inference on pc with static images (using predict.py)
+- Update the detection plotting pipeline to allow for mulitple detection boxes per image
 
-BUGFIX:
-
-- Fix these export bugs where it says the model is not compiled properly (maybe we need to run 1 round of dummy inference first to init?) e.g.: `WARNING:tensorflow:Skipping full serialization of Keras layer <keras.layers.core.lambda_layer.Lambda object at 0x000001CF085B4FD0>, because it is not built.`
-- Need to write out model_config back out into file pipeline.config
+- Update the data loading pipeline to properly load the test and validation sets all together
+- Port to raspberry pi
 
 ## Usage Guide
 
