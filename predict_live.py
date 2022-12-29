@@ -18,8 +18,9 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------- #
     #                                  PARAMETERS                                  #
     # ---------------------------------------------------------------------------- #
-    LABELS_PATH = ".\\data\\alex\\mscoco_label_map.pbtxt"
-    MODEL_PATH = ".\\models\\ssd_mobilenet_v2_2"
+    DATASET_PATH = "data/totoro/"
+    LABELS_PATH = DATASET_PATH + "label_map.pbtxt"
+    MODEL_PATH = "./exported-models/my_model/saved_model"
 
     # ---------------------------------------------------------------------------- #
     #                                   LOAD DATA                                  #
@@ -44,4 +45,4 @@ if __name__ == "__main__":
     # Visualise the live detection capability on the webcam
     # utils.view_webcam()
     print("Running inference on webcam ...")
-    utils.run_detector_live(model, LABELS_PATH)
+    utils.run_detector_live(model, LABELS_PATH, min_score=0.5)

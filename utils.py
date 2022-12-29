@@ -20,9 +20,10 @@ import tensorflow as tf
 import glob as glob
 import dataset as dataset
 import platform as platform
-# from playsound import playsound
-# import winsound as winsound
-
+from playsound import playsound
+import os
+if platform.system() == 'Windows':
+    import winsound as winsound
 
 def plot_detections(image_np, boxes, classes, scores, figsize=(12, 16), image_name=None, min_score=0.5):
     """Wrapper function to visualize detections.
@@ -220,7 +221,7 @@ def run_detector(model, input_folder, output_folder, labels_file, min_score=0.5,
         i = i + 1
 
 
-def run_detector_live(model, labels_file):
+def run_detector_live(model, labels_file, min_score=0.5):
     """
     TODO: Document me!
     
@@ -244,13 +245,20 @@ def run_detector_live(model, labels_file):
         labels_dict = dataset.get_tf_labels_from_file(labels_file)
         class_names = [list(labels_dict.keys())[list(labels_dict.values()).index(int(item))] for item in result["detection_classes"][0]]
 
+        # If there is a detection, play a beep
+        for score in result["detection_scores"][0]:
+            if (score > min_score):
+                print("DETECTED!")
+                play_beep()
+                break
+
         image_with_boxes = draw_boxes(
             np.squeeze(img), 
-            result["detection_boxes"][0],
+            result["detection_boxes"],
             class_names,
             result["detection_scores"][0],
             max_boxes=10,
-            min_score=0.5)
+            min_score=min_score)
 
         # Display the resulting frame
         cv2.imshow('image_with_boxes', image_with_boxes)
@@ -355,11 +363,15 @@ def play_beep():
     Plays a beep sound effect (for when the fruit is successfully scanned)
     """
 
-    frequency = 2500  # Set Frequency To 2500 Hertz
-    duration = 100  # Set Duration To 1000 ms == 1 second
-    winsound.Beep(frequency, duration)
+    # playsound('./bruh.mp3')
 
-    # playsound('C:\\Users\\alex\Documents\\dev\\fruit-finder\\bruh.mp3')
+    if platform.system() == 'Windows':
+        frequency = 2500  # Set Frequency To 2500 Hertz
+        duration = 100  # Set Duration To 1000 ms == 1 second
+        winsound.Beep(frequency, duration)
+    else:
+        os.system("afplay /Users/alexnicholson/Music/iTunes/iTunes\ Media/Music/Unknown\ Artist/Unknown\ Album/Blow.aiff")
+        # os.system('say -v Kyoko "こんにちはトトロ!"')
 
 
 def load_image_into_numpy_array(path):
