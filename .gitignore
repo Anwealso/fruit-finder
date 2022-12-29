@@ -4,3 +4,4 @@ __pycache__
 models/*
 exported-models/*
 data/*
+test/*
