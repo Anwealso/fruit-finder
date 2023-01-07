@@ -29,7 +29,6 @@ An AI fruit scanner for supermarket checkouts
 - Adapt the tfjs pacman demo to work for my scannner
 - Port my model to tfjs
 
-
 - Implement model in tfjs + build a basic UI around it
 - Train multiple fruit and veg classes
 - Implement multiple detections per image plotting
