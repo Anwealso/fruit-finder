@@ -5,3 +5,4 @@ models/*
 exported-models/*
 data/*
 test/*
+deploy/*
