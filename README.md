@@ -26,12 +26,14 @@ An AI fruit scanner for supermarket checkouts
 
 ### TODO:
 
-- Build scanning GUI
-- Add tensorboard stats tracking
-- Update the detection plotting pipeline to allow for mulitple detection boxes per image
+- Adapt the tfjs pacman demo to work for my scannner
+- Port my model to tfjs
 
-- Update the data loading pipeline to properly load the test and validation sets all together
-- Port to raspberry pi
+
+- Implement model in tfjs + build a basic UI around it
+- Train multiple fruit and veg classes
+- Implement multiple detections per image plotting
+- Be done with it and move onto other projects
 
 ## Usage Guide
 
