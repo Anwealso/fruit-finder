@@ -111,12 +111,7 @@ python labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 ## Converting to TFJS
 
 ```bash
-tensorflowjs_converter \
-    --input_format=tf_saved_model \
-    --output_node_names='MobilenetV1/Predictions/Reshape_1' \
-    --saved_model_tags=serve \
-    exported-models\\my_model\\saved_model \
-    exported-models\\my_model\\web_model
+tensorflowjs_converter --input_format=tf_saved_model --output_node_names='MobilenetV1/Predictions/Reshape_1' --saved_model_tags=serve exported-models\\my_model\\saved_model exported-models\\my_model\\web_model
 ```
 
 ## Other Resources
