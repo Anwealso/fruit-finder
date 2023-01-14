@@ -6,9 +6,6 @@ exported-models/
 data/
 test/
 
-deploy/no_bundler/
-deploy/webpack/
-deploy/parcel/
-
-# deploy/parcel/node_modules/
-# deploy/parcel/.*
+deploy/depracated/
+deploy/node_modules/
+deploy/.*
