@@ -1,10 +1,11 @@
 .DS_Store
 __pycache__
 
-models/*
-exported-models/*
-data/*
-test/*
-deploy/*
-deploy/node_modules/*
-deploy/.*
+models/
+exported-models/
+data/
+test/
+
+deploy/no_bundler/
+deploy/parcel/node_modules/
+deploy/parcel/.*
