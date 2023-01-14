@@ -6,3 +6,5 @@ exported-models/*
 data/*
 test/*
 deploy/*
+deploy/node_modules/*
+deploy/.*
