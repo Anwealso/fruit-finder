@@ -37,7 +37,7 @@ document.getElementById('predict').addEventListener('click', () => {
 /* -------------------------------------------------------------------------- */
 /*                                  FUNCTIONS                                 */
 /* -------------------------------------------------------------------------- */
-async function predict() {
+async function runInference() {
   /**
    * Gets images from the webcam and runs the model on them to get the model's 
    * predictions
@@ -47,22 +47,26 @@ async function predict() {
   while (isPredicting) {
     // Capture the frame from the webcam.
     const img = await getImage();
+    console.log(img);
 
     // Make a prediction through mobilenet
-    const predictions = model.predict(img);
-    // console.log(predictions);
+    // const predictions = model.executeAsync(img);
+    let predictions = await model.executeAsync(
+      { 'input_tensor' : img },
+      [ 'detection_boxes','detection_scores','detection_classes','num_detections']);
+    console.log(predictions);
 
     // Returns the index with the maximum probability. This number corresponds
     // to the class the model thinks is the most probable given the input.
-    const predictedClass = predictions.as1D().argMax();
-    const classId = (await predictedClass.data())[0];
+    // const predictedClass = predictions.as1D().argMax();
+    // const classId = (await predictedClass.data())[0];
     
-    // console.log(predictedClass);
-    console.log(classId);
+    // // console.log(predictedClass);
+    // console.log(classId);
 
     img.dispose();
 
-    ui.predictClass(classId);
+    // ui.predictClass(classId);
     await tf.nextFrame();
   }
   ui.donePredicting();
@@ -76,7 +80,7 @@ async function getImage() {
   
   const img = await webcam.capture();
   const processedImg =
-      tf.tidy(() => img.expandDims(0).toFloat().div(127).sub(1));
+      tf.tidy(() => img.expandDims(0));
   img.dispose();
   return processedImg;
 }
@@ -95,7 +99,7 @@ async function init() {
     console.log(e);
     document.getElementById('no-webcam').style.display = 'block';
   }
-  model = await tf.loadLayersModel('http://127.0.0.1:3000/tfjs_artifacts/model.json');
+  model = await tf.loadGraphModel('http://127.0.0.1:3000/tfjs_artifacts/model.json');
 
   ui.init();
 
@@ -103,12 +107,10 @@ async function init() {
   // programs so the first time we collect data from the webcam it will be
   // quick.
   const screenShot = await webcam.capture();
-  model.predict(screenShot.expandDims(0));
-  screenShot.dispose();
   
   // Run the model immediately
   isPredicting = true;
-  predict();
+  runInference();
 }
 
 // Initialize the application.

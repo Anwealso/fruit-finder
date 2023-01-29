@@ -18,11 +18,6 @@ app.get('/', function(req, res) {
   res.sendFile(path.join(__dirname + "/" + 'index.html'));
 })
 
-app.get('/get_model', function(req, res) {
-  res.setHeader('Content-Type', 'application/json');
-  res.sendFile(path.join(__dirname + "/web_model/" + 'model.json'));
-})
-
 app.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
 })
