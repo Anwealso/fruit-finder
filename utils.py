@@ -22,6 +22,7 @@ import dataset as dataset
 import platform as platform
 # from playsound import playsound
 # import winsound as winsound
+from PIL import Image
 
 
 def plot_detections(image_np, boxes, classes, scores, figsize=(12, 16), image_name=None, min_score=0.5):
@@ -167,6 +168,35 @@ def plot_predictions(image, predictions):
     """
 
     # TODO: Implement ...
+
+
+def run_detector_api(model, labels_file, img, min_score=0.5):
+    """
+    TODO: Document me!
+    """
+
+    # Convert the image into the correct format (input 'img' is of PIL Image type)
+    img = tf.keras.utils.img_to_array(img)
+    img = np.expand_dims(img, 0)
+
+    # Run inference
+    result = model(img)
+    result = {key:value.numpy() for key,value in result.items()}
+
+    # Convert Class Indices to Class Names
+    labels_dict = dataset.get_tf_labels_from_file(labels_file)
+    class_names = [list(labels_dict.keys())[list(labels_dict.values()).index(int(item))] for item in result["detection_classes"][0]]
+
+    image_with_boxes = draw_boxes(
+        np.squeeze(img), 
+        result["detection_boxes"],
+        class_names,
+        result["detection_scores"][0],
+        max_boxes=10,
+        min_score=min_score)
+
+    # Return the output image (converted back to PIL Image type)
+    return Image.fromarray(np.uint8(image_with_boxes))
 
 
 def run_detector(model, input_folder, output_folder, labels_file, min_score=0.5, verbose=True):
