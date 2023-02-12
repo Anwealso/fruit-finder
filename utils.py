@@ -18,8 +18,8 @@ import numpy as np
 import time
 import tensorflow as tf
 import glob as glob
-import dataset as dataset
-import platform as platform
+import dataset
+import platform
 from playsound import playsound
 import os
 if platform.system() == 'Windows':
@@ -232,7 +232,7 @@ def run_detector_live(model, labels_file, min_score=0.5):
     vid = cv2.VideoCapture(0)
     
     print("Streaming frames from webcam ...")
-    while(True):
+    while (True):
         # Capture the video frame by frame
         ret, frame = vid.read()
         img = np.expand_dims(frame, 0)
@@ -249,7 +249,7 @@ def run_detector_live(model, labels_file, min_score=0.5):
         for score in result["detection_scores"][0]:
             if (score > min_score):
                 print("DETECTED!")
-                play_beep()
+                # play_beep()
                 break
 
         image_with_boxes = draw_boxes(
@@ -365,13 +365,13 @@ def play_beep():
 
     # playsound('./bruh.mp3')
 
-    if platform.system() == 'Windows':
-        frequency = 2500  # Set Frequency To 2500 Hertz
-        duration = 100  # Set Duration To 1000 ms == 1 second
-        winsound.Beep(frequency, duration)
-    else:
-        os.system("afplay /Users/alexnicholson/Music/iTunes/iTunes\ Media/Music/Unknown\ Artist/Unknown\ Album/Blow.aiff")
-        # os.system('say -v Kyoko "こんにちはトトロ!"')
+    # if platform.system() == 'Windows':
+    #     frequency = 2500  # Set Frequency To 2500 Hertz
+    #     duration = 100  # Set Duration To 1000 ms == 1 second
+    #     winsound.Beep(frequency, duration)
+    # else:
+    os.system("afplay /Users/alexnicholson/Music/iTunes/iTunes\ Media/Music/Unknown\ Artist/Unknown\ Album/Blow.aiff")
+    # os.system('say -v Kyoko "こんにちはトトロ!"')
 
 
 def load_image_into_numpy_array(path):
